@@ -1,48 +1,80 @@
-import { useState } from 'react';
-import { View, Text, ImageBackground } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
 import { Button } from '../../components/ui/Button';
-import { SegmentPills } from '../../components/ui/SegmentPills';
+import Screen from '../../components/ui/Screen';
+import Title from '../../components/ui/Title';
 
-const SERVICES = [
-  { id: 'basic', label: 'Basic' },
-  { id: 'deep', label: 'Deep' },
-  { id: 'interior', label: 'Interior' }
+// MOCK DATA
+const SAVED_ADDRESSES = [
+  {
+    id: 'home',
+    label: 'Home',
+    address: '123 Residence Street',
+    notes: 'Apartment 4B, Blue building',
+    icon: 'home' as const
+  },
+  {
+    id: 'work',
+    label: 'Work',
+    address: '456 Business Avenue',
+    notes: 'Office complex, parking level B1',
+    icon: 'business' as const
+  }
 ];
 
 export default function AddressScreen() {
-  const [service, setService] = useState('basic');
   return (
-    <SafeAreaView className="flex-1 bg-surface-50">
-      <View className="flex-1">
-        <ImageBackground source={require('../../assets/images/react-logo.png')} resizeMode="cover" className="flex-1 opacity-95">
-          <View className="absolute left-1/2 top-1/2 -ml-2 -mt-2 h-4 w-4 rounded-full bg-primary border-2 border-white" />
-          <View className="absolute right-4 bottom-44">
-            <Button testID="gps-button" variant="subtle" size="md">➤</Button>
-          </View>
-        </ImageBackground>
-      </View>
-
-      <View className="bg-surface-0 px-4 pt-4 pb-6 rounded-t-2xl shadow-sheet border-t border-border-subtle">
-        <SegmentPills items={SERVICES} value={service} onChange={setService} testIDPrefix="service-pill" />
-        <Link href="/(public)/price" asChild>
-          <View testID="search-bar" className="mt-4 rounded-2xl bg-surface-100 border border-border-subtle px-4 py-4">
-            <Text className="text-text-muted">Where to & for how much?</Text>
-          </View>
-        </Link>
-        <View className="mt-4 gap-3">
-          {['Av. Akioud', 'Marrakesh Menara Airport', 'Jemaa El-Fna'].map(label => (
-            <View key={label} className="flex-row items-center gap-3 rounded-2xl bg-surface-0 border border-border-subtle px-4 py-3 shadow-card">
-              <Text className="text-text-muted">📍</Text>
-              <Text className="text-text-primary">{label}</Text>
-            </View>
+    <Screen>
+      <View className="px-4 py-6 flex-1">
+        <Title>Select Address</Title>
+        
+        <View className="mt-8 gap-3">
+          {SAVED_ADDRESSES.map((addr) => (
+            <Link key={addr.id} href="./price" asChild>
+              <Pressable 
+                testID={`address-${addr.id}`}
+                className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm active:opacity-90"
+              >
+                <View className="flex-row items-start justify-between">
+                  <View className="flex-1">
+                    <View className="flex-row items-center gap-3 mb-2">
+                      <Ionicons name={addr.icon} size={20} color="#3b82f6" />
+                      <Text className="text-lg font-semibold text-gray-900">{addr.label}</Text>
+                    </View>
+                    <Text className="text-gray-900 mb-1">{addr.address}</Text>
+                    <Text className="text-sm text-gray-500">{addr.notes}</Text>
+                  </View>
+                  <View className="ml-4 flex-row items-center gap-2">
+                    <Pressable className="p-2">
+                      <Ionicons name="ellipsis-vertical" size={16} color="#9ca3af" />
+                    </Pressable>
+                    <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
+                  </View>
+                </View>
+              </Pressable>
+            </Link>
           ))}
         </View>
-        <Link href="/(public)/price" asChild>
-          <Button className="mt-6" testID="use-current-location">Use Current Location</Button>
-        </Link>
+
+        <View className="border-t border-gray-200 pt-4 mt-6">
+          <Pressable 
+            testID="add-address"
+            className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm active:opacity-90 border-dashed"
+          >
+            <View className="flex-row items-center justify-center gap-3">
+              <Ionicons name="add-circle-outline" size={20} color="#3b82f6" />
+              <Text className="text-lg font-medium text-gray-600">Add New Address</Text>
+            </View>
+          </Pressable>
+        </View>
+        
+        <View className="mt-8">
+          <Button variant="subtle" testID="use-current-location">
+            📍 Use Current Location
+          </Button>
+        </View>
       </View>
-    </SafeAreaView>
+    </Screen>
   );
 }

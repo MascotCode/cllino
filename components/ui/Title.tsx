@@ -7,7 +7,7 @@ interface TitleProps {
 }
 
 export default function Title({ children, className }: TitleProps) {
-  const defaultClasses = 'text-2xl font-semibold text-zinc-900';
+  const defaultClasses = 'text-2xl font-semibold text-text-primary';
   const combinedClasses = className ? `${defaultClasses} ${className}` : defaultClasses;
   
   return (

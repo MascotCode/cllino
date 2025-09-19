@@ -5,7 +5,7 @@ interface DividerProps {
 }
 
 export default function Divider({ className }: DividerProps) {
-  const defaultClasses = 'h-[1px] bg-zinc-100 my-2';
+  const defaultClasses = 'h-[1px] bg-border-subtle my-2';
   const combinedClasses = className ? `${defaultClasses} ${className}` : defaultClasses;
   
   return (
