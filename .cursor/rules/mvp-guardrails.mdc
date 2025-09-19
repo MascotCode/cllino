@@ -1,0 +1,8 @@
+---
+description: Enforce MVP scope (devplan 2.0, cash-only)
+globs: ["apps/mobile/**", "server/**", "docs/**"]
+---
+- Implement only flows defined in devplan 2.0 Golden Paths.
+- No vehicle profiles; collect Car Size only.
+- Payment is **cash only**; persist price + payment_status.
+- Any out-of-scope idea must first propose: value, risk, metrics, rollback.

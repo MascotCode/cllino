@@ -1,0 +1,6 @@
+---
+description: PR hygiene
+globs: ["**/*"]
+---
+- Conventional commits.
+- PR must include: Acceptance Criteria, Demo link/recording, Risks, Rollback.

@@ -1,0 +1,9 @@
+---
+description: Global standards for this repo
+alwaysApply: true
+globs: ["**/*"]
+---
+- Tech baseline: Expo Router + TypeScript + React Query + Zod + NativeWind + Detox + pnpm.
+- Components ≤200 LOC; move business logic into hooks/services.
+- Any feature change updates docs/demo-script.md.
+- Follow /docs/devplan-2.0.md and keep Golden Path green.

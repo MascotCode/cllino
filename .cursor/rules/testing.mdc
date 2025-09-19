@@ -1,0 +1,7 @@
+---
+description: Tests and demo integrity
+globs: ["apps/mobile/**", "e2e/**", "test/**"]
+---
+- Unit: vitest/jest + @testing-library/react-native.
+- E2E (Detox) must cover: Onboard → Service → Address → Match → Confirm → Complete (Cash) → Rate.
+- Any bug fix requires a failing test first.

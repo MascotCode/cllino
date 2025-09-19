@@ -1,0 +1,7 @@
+---
+description: Pricing guardrails
+globs: ["apps/mobile/**", "server/**"]
+---
+- Show **suggested price** with min/max bounds.
+- Apply **car-size surcharge** and **distance adjustment**.
+- Block values below floor with an explanation toast.

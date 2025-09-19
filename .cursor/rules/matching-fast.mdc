@@ -1,0 +1,10 @@
+---
+description: Fast-Match behavior (small batch)
+globs: ["apps/mobile/**", "server/**"]
+---
+- Invite max **1–3** providers ranked by ETA + rating + distance.
+- Response TTL **60–90s**; expire deterministically server-side.
+- If exactly one response → **auto-assign**.
+- If multiple → show **≤2 cards** (ETA/rating/price). Expire the rest.
+- Reveal exact address **after** match.
+- If customer idle ≥60s on choose screen → auto‑assign best.
