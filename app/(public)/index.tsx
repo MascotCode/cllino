@@ -3,12 +3,14 @@ import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
-import { Alert, Linking, Platform, Pressable, Text, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, Linking, Modal, Platform, Pressable, Text, View } from 'react-native';
 import MapView, { Camera, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import type { RouteEntryModalRef } from '../../components/search/RouteEntryModal';
 import RouteEntryModal from '../../components/search/RouteEntryModal';
+import AmountInput from '../../components/ui/AmountInput';
 import type { Place } from '../../types/places';
+import { computePricing, roundTo5, type CarSize, type PricingBreakdown } from '../../utils/pricing';
 
 // Tiny util to render money like "35 MAD"
 const fmtMoney = (amount: number, currency = 'MAD') => `${amount} ${currency}`;
@@ -35,13 +37,20 @@ export default function ServiceHome() {
   const snapPoints = useMemo(() => ['45%'], []); // Fixed single snap point
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressLabel, setAddressLabel] = useState<string>('Set pickup location');
-  const [isMapInteracting, setIsMapInteracting] = useState(false);
   
   // Car selection state
   const [sheetView, setSheetView] = useState<SheetView>('services');
   const [selectedService, setSelectedService] = useState<typeof SERVICES[0] | null>(null);
-  const [selectedCarSize, setSelectedCarSize] = useState<string>('compact');
-  const [vehicleQuantity, setVehicleQuantity] = useState<number>(1);
+  const [carSize, setCarSize] = useState<CarSize>('compact');
+  const [vehicleCount, setVehicleCount] = useState<number>(1);
+  
+  // Pricing state
+  const [priceTotal, setPriceTotal] = useState<number>(0);
+  const [showSoftCap, setShowSoftCap] = useState<boolean>(false);
+  const [pendingAbsMax, setPendingAbsMax] = useState<number | null>(null);
+  const [breakdown, setBreakdown] = useState<PricingBreakdown | null>(null);
+  const [showMinWarning, setShowMinWarning] = useState<boolean>(false);
+  const [effectiveAbsMax, setEffectiveAbsMax] = useState<number>(0);
 
   const initialRegion: Region = {
     latitude: 33.5731, // Casablanca
@@ -144,22 +153,72 @@ export default function ServiceHome() {
     setSelectedService(null);
   };
 
-  const calculatePrice = () => {
-    if (!selectedService) return 0;
-    const carSize = CAR_SIZES.find(size => size.id === selectedCarSize);
-    const surcharge = carSize ? carSize.surcharge : 0;
-    const perVehicle = selectedService.price + surcharge;
-    return perVehicle * vehicleQuantity;
+  // Show minimum price warning
+  const showMinPriceWarning = () => {
+    setShowMinWarning(true);
+  };
+
+  // Pricing recalculation effect
+  useEffect(() => {
+    if (!selectedService) return;
+    
+    const b = computePricing({
+      serviceId: selectedService.id,
+      carSize,
+      vehicleCount,
+    });
+    
+    setBreakdown(b);
+    setEffectiveAbsMax(b.absMaxTotal);
+    
+    setPriceTotal(prev => {
+      if (!prev || prev < b.minTotal) return b.fairTotal;
+      // Keep user's higher choice without capping
+      return prev;
+    });
+    
+    // Update soft cap note will be handled in the onChange callback
+  }, [selectedService, carSize, vehicleCount]);
+  
+  // Update soft cap and min warning when price changes
+  useEffect(() => {
+    if (breakdown) {
+      setShowSoftCap(priceTotal > breakdown.typicalMaxTotal);
+      setShowMinWarning(priceTotal === breakdown.minTotal);
+    }
+  }, [priceTotal, breakdown]);
+
+  // Confirmation modal handlers
+  const onConfirmHighPrice = () => {
+    if (pendingAbsMax !== null && breakdown) {
+      // Allow the higher price after confirmation
+      setPriceTotal(pendingAbsMax);
+      setShowSoftCap(pendingAbsMax > breakdown.typicalMaxTotal);
+      
+      // Raise the effective absMax to allow further increases from this new level
+      setEffectiveAbsMax(Math.max(effectiveAbsMax, pendingAbsMax + 50)); // Allow 50 MAD more increases
+    }
+    setPendingAbsMax(null);
+  };
+  
+  const onCancelHighPrice = () => {
+    if (breakdown) {
+      setPriceTotal(breakdown.typicalMaxTotal);
+      setShowSoftCap(false);
+    }
+    setPendingAbsMax(null);
   };
 
   const onContinue = () => {
-    if (!selectedService) return;
-    const totalPrice = calculatePrice();
+    if (!selectedService || !breakdown) return;
+    
     const query = new URLSearchParams({
       serviceId: selectedService.id,
-      carSize: selectedCarSize,
-      quantity: vehicleQuantity.toString(),
-      totalPrice: totalPrice.toString()
+      carSize,
+      vehicleCount: vehicleCount.toString(),
+      priceTotal: priceTotal.toString(),
+      minTotal: breakdown.minTotal.toString(),
+      typicalMaxTotal: breakdown.typicalMaxTotal.toString()
     });
     router.push(`./time?${query.toString()}`);
   };
@@ -353,9 +412,9 @@ export default function ServiceHome() {
                     return (
                       <Pressable
                         key={size.id}
-                        onPress={() => setSelectedCarSize(size.id)}
+                        onPress={() => setCarSize(size.id as CarSize)}
                         className={`flex-1 min-w-[80px] px-3 py-3 rounded-2xl border items-center gap-2 ${
-                          selectedCarSize === size.id
+                          carSize === size.id
                             ? 'bg-blue-50 border-blue-500'
                             : 'bg-white border-gray-200'
                         }`}
@@ -363,11 +422,11 @@ export default function ServiceHome() {
                         <Ionicons 
                           name={getCarIcon(size.id) as any} 
                           size={20} 
-                          color={selectedCarSize === size.id ? '#3B82F6' : '#6B7280'} 
+                          color={carSize === size.id ? '#3B82F6' : '#6B7280'} 
                         />
                         <Text
                           className={`text-xs font-medium ${
-                            selectedCarSize === size.id
+                            carSize === size.id
                               ? 'text-blue-700'
                               : 'text-gray-700'
                           }`}
@@ -386,31 +445,26 @@ export default function ServiceHome() {
                   <MaterialIcons name="format-list-numbered" size={16} color="#6B7280" />
                   <Text className="text-sm font-medium text-gray-900">Number of vehicles</Text>
                 </View>
-                <View className="flex-row items-center justify-center gap-6">
-                  <Pressable
-                    onPress={() => setVehicleQuantity(Math.max(1, vehicleQuantity - 1))}
-                    className={`w-12 h-12 rounded-full items-center justify-center ${
-                      vehicleQuantity <= 1 ? 'bg-gray-100' : 'bg-blue-100 active:bg-blue-200'
-                    }`}
-                    disabled={vehicleQuantity <= 1}
-                  >
-                    <Ionicons 
-                      name="remove" 
-                      size={20} 
-                      color={vehicleQuantity <= 1 ? '#9CA3AF' : '#3B82F6'} 
-                    />
-                  </Pressable>
-                  <View className="min-w-[48px] items-center">
-                    <Text className="text-2xl font-bold text-gray-900">
-                      {vehicleQuantity}
-                    </Text>
-                  </View>
-                  <Pressable
-                    onPress={() => setVehicleQuantity(vehicleQuantity + 1)}
-                    className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center active:bg-blue-200"
-                  >
-                    <Ionicons name="add" size={20} color="#3B82F6" />
-                  </Pressable>
+                <View className="flex-row items-center justify-center gap-6" pointerEvents="auto">
+                  <AmountInput
+                    testID="tid.vehicle.count"
+                    value={vehicleCount}
+                    step={1}
+                    min={1}
+                    typicalMax={5}
+                    absMax={5}
+                    onChange={(next) => {
+                      const clamped = Math.max(1, Math.min(5, next));
+                      setVehicleCount(clamped);
+                    }}
+                    onClampMin={() => {
+                      // Optional: could show a toast that minimum is 1 vehicle
+                    }}
+                    onExceedAbsMax={() => {
+                      // Cap at 5 vehicles for now, no modal needed
+                      setVehicleCount(5);
+                    }}
+                  />
                 </View>
               </View>
 
@@ -420,18 +474,64 @@ export default function ServiceHome() {
                   <MaterialIcons name="receipt" size={18} color="#6B7280" />
                   <Text className="text-sm font-medium text-gray-700">Pricing Summary</Text>
                 </View>
-                <View className="flex-row justify-between items-center mb-2">
-                  <Text className="text-base font-bold text-gray-900">
-                    Estimated total
+                
+                {/* Interactive Price Section */}
+                {breakdown && (
+                  <View className="mb-3">
+                    <Text className="text-base font-medium text-gray-900 mb-2">Estimated total</Text>
+                    
+                    <View className="flex-row items-center justify-center gap-3">
+                      <AmountInput
+                        testID="tid.price"
+                        value={priceTotal}
+                        step={5}
+                        min={breakdown.minTotal}
+                        typicalMax={breakdown.typicalMaxTotal}
+                        absMax={effectiveAbsMax}
+                        onClampMin={showMinPriceWarning}
+                        onExceedAbsMax={(p) => setPendingAbsMax(p)}
+                        onChange={(next) => {
+                          const next5 = roundTo5(next);
+                          setPriceTotal(next5);
+                          setShowSoftCap(next5 > breakdown.typicalMaxTotal);
+                        }}
+                      />
+                      <Text className="text-2xl font-bold text-blue-600">MAD</Text>
+                    </View>
+                  </View>
+                )}
+                
+                {/* Min/Typical Range */}
+                {breakdown && (
+                  <View className="flex-row items-center gap-1 mb-2">
+                    <Text className="text-xs text-gray-500" testID="tid.price.minBadge">
+                      Min {fmtMoney(breakdown.minTotal)} · 
+                    </Text>
+                    <Text className="text-xs text-gray-500" testID="tid.price.typBadge">
+                      Typical up to {fmtMoney(breakdown.typicalMaxTotal)}
+                    </Text>
+                  </View>
+                )}
+                
+                {/* Soft Cap Advisory */}
+                {showSoftCap && (
+                  <Text className="text-xs text-blue-600 mb-2" testID="tid.price.softcap">
+                    Above the typical range — that&apos;s okay, it may match faster.
                   </Text>
-                  <Text className="text-xl font-bold text-blue-600">
-                    {fmtMoney(calculatePrice())}
-                  </Text>
-                </View>
+                )}
+                
+                {/* Cash Payment */}
                 <View className="flex-row items-center gap-1">
                   <MaterialIcons name="payment" size={12} color="#6B7280" />
                   <Text className="text-xs text-gray-500">Cash on completion</Text>
                 </View>
+                
+                {/* Min Price Warning */}
+                {showMinWarning && (
+                  <View className="mt-2 bg-red-50 rounded-lg px-3 py-2" testID="tid.price.warning.min">
+                    <Text className="text-xs text-red-600">At minimum price</Text>
+                  </View>
+                )}
               </View>
 
               {/* Continue Button */}
@@ -456,6 +556,37 @@ export default function ServiceHome() {
         onSelectPlace={onSelectPlace}
         onChooseOnMap={onChooseOnMap}
       />
+      
+      {/* Fat-finger Confirmation Modal */}
+      <Modal
+        visible={pendingAbsMax !== null}
+        transparent
+        animationType="fade"
+        onRequestClose={onCancelHighPrice}
+      >
+        <View className="flex-1 bg-black/50 justify-center items-center px-6">
+          <View className="bg-white rounded-2xl p-6 w-full max-w-sm" testID="tid.price.confirm.absMax">
+            <Text className="text-lg font-bold text-gray-900 mb-2">Unusual price</Text>
+            <Text className="text-gray-600 mb-6">
+              This is much higher than typical ({breakdown ? fmtMoney(breakdown.typicalMaxTotal) : ''} MAD). Continue with {pendingAbsMax ? fmtMoney(pendingAbsMax) : ''} MAD?
+            </Text>
+            <View className="flex-row gap-3">
+              <Pressable
+                onPress={onCancelHighPrice}
+                className="flex-1 py-3 px-4 bg-gray-100 rounded-xl items-center active:bg-gray-200"
+              >
+                <Text className="text-gray-700 font-medium">Cancel</Text>
+              </Pressable>
+              <Pressable
+                onPress={onConfirmHighPrice}
+                className="flex-1 py-3 px-4 bg-blue-600 rounded-xl items-center active:bg-blue-700"
+              >
+                <Text className="text-white font-medium">Continue</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
