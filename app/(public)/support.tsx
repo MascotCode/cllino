@@ -35,7 +35,7 @@ export default function SupportScreen() {
         {/* Header */}
         <View className="mb-8">
           <Text className="text-2xl font-bold text-gray-900">Support</Text>
-          <Text className="text-gray-600 mt-1">We're here to help you</Text>
+          <Text className="text-gray-600 mt-1">We&apos;re here to help you</Text>
         </View>
 
         {/* Support Options */}

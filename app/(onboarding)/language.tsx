@@ -17,7 +17,7 @@ export default function LanguageScreen() {
       await AsyncStorage.setItem('onboardingCompleted', 'true');
       
       // Navigate to the main app
-      router.replace('/(tabs)');
+      router.replace('/(public)');
     } catch (error) {
       console.error('Error saving language:', error);
     }

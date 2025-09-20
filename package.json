@@ -8,7 +8,9 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "lint:native-nav": "node scripts/check-native-nav.js",
+    "nav:lint": "node scripts/check-native-nav.js"
   },
   "dependencies": {
     "@expo/metro-runtime": "~6.1.2",

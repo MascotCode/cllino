@@ -1,10 +1,10 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Badge from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import Screen from '../../components/ui/Screen';
 import StickyFooter from '../../components/ui/StickyFooter';
 import Title from '../../components/ui/Title';
 
@@ -27,7 +27,7 @@ const TIMELINE_STEPS = [
 
 export default function ConfirmScreen() {
   return (
-    <Screen>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Provider assigned</Title>
         
@@ -117,6 +117,6 @@ export default function ConfirmScreen() {
           </Button>
         </Link>
       </StickyFooter>
-    </Screen>
+    </SafeAreaView>
   );
 }

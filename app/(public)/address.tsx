@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
-import Screen from '../../components/ui/Screen';
 import Title from '../../components/ui/Title';
 
 // MOCK DATA
@@ -24,16 +24,32 @@ const SAVED_ADDRESSES = [
 ];
 
 export default function AddressScreen() {
+  const params = useLocalSearchParams();
   return (
-    <Screen>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Select Address</Title>
         
         <View className="mt-8 gap-3">
-          {SAVED_ADDRESSES.map((addr) => (
-            <Link key={addr.id} href="./price" asChild>
-              <Pressable 
+          {SAVED_ADDRESSES.map((addr) => {
+            const handleAddressSelect = () => {
+              const query = new URLSearchParams({
+                ...Object.entries(params).reduce((acc, [key, value]) => {
+                  acc[key] = String(value);
+                  return acc;
+                }, {} as Record<string, string>),
+                addressLabel: `${addr.label} - ${addr.address}`,
+                lat: addr.id === 'home' ? '33.5731' : '33.5831',
+                lng: addr.id === 'home' ? '-7.5898' : '-7.5798'
+              });
+              router.push(`./time?${query.toString()}`);
+            };
+
+            return (
+              <Pressable
+                key={addr.id}
                 testID={`address-${addr.id}`}
+                onPress={handleAddressSelect}
                 className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm active:opacity-90"
               >
                 <View className="flex-row items-start justify-between">
@@ -53,8 +69,8 @@ export default function AddressScreen() {
                   </View>
                 </View>
               </Pressable>
-            </Link>
-          ))}
+            );
+          })}
         </View>
 
         <View className="border-t border-gray-200 pt-4 mt-6">
@@ -75,6 +91,6 @@ export default function AddressScreen() {
           </Button>
         </View>
       </View>
-    </Screen>
+    </SafeAreaView>
   );
 }

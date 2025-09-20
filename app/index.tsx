@@ -1,30 +1,17 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
 import { useEffect } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 
 export default function AppEntry() {
+ 
   useEffect(() => {
-    checkOnboardingStatus();
+    // Small delay to ensure router is ready
+    const timer = setTimeout(() => {
+      router.replace('/(public)');
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, []);
-
-  const checkOnboardingStatus = async () => {
-    try {
-      const onboardingCompleted = await AsyncStorage.getItem('onboardingCompleted');
-      
-      if (onboardingCompleted === 'true') {
-        // User has completed onboarding, go to main app
-        router.replace('/(tabs)');
-      } else {
-        // User hasn't completed onboarding, go to welcome screen
-        router.replace('/(onboarding)/welcome');
-      }
-    } catch (error) {
-      console.error('Error checking onboarding status:', error);
-      // Default to onboarding if there's an error
-      router.replace('/(onboarding)/welcome');
-    }
-  };
 
   // Show loading screen while checking onboarding status
   return (

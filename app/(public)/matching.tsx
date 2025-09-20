@@ -1,10 +1,10 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import Badge from '../../components/ui/Badge';
 import { Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import Screen from '../../components/ui/Screen';
 import Title from '../../components/ui/Title';
 import { fmtMoney } from '../../utils/format';
 import { getChevronIcon } from '../../utils/i18n';
@@ -33,7 +33,7 @@ const PROVIDERS = [
 
 export default function MatchingScreen() {
   return (
-    <Screen>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Finding your pro…</Title>
         
@@ -95,6 +95,6 @@ export default function MatchingScreen() {
           ))}
         </View>
       </View>
-    </Screen>
+    </SafeAreaView>
   );
 }

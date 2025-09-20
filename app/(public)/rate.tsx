@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import Screen from '../../components/ui/Screen';
 import StarRating from '../../components/ui/StarRating';
 import StickyFooter from '../../components/ui/StickyFooter';
 import Title from '../../components/ui/Title';
@@ -42,7 +42,7 @@ export default function RateScreen() {
   };
 
   return (
-    <Screen>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Rate your service</Title>
         
@@ -129,6 +129,6 @@ export default function RateScreen() {
           Submit rating
         </Button>
       </StickyFooter>
-    </Screen>
+    </SafeAreaView>
   );
 }

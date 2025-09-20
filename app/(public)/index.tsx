@@ -161,7 +161,7 @@ export default function ServiceHome() {
       quantity: vehicleQuantity.toString(),
       totalPrice: totalPrice.toString()
     });
-    router.push(`./orders?${query.toString()}`);
+    router.push(`./time?${query.toString()}`);
   };
 
   // --- Drawer show/hide helpers (imperative + debounced)

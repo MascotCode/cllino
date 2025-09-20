@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
-import Screen from '../../components/ui/Screen';
 import StickyFooter from '../../components/ui/StickyFooter';
 import Title from '../../components/ui/Title';
 import { fmtMoney } from '../../utils/format';
@@ -22,10 +22,32 @@ const ORDER_SUMMARY = {
 };
 
 export default function PriceScreen() {
+  const params = useLocalSearchParams();
   const total = ORDER_SUMMARY.service.price;
+
+  const formatTimeSlot = () => {
+    if (params.when === 'now') {
+      return 'Now';
+    } else if (params.when === 'schedule' && params.slotStart) {
+      const startTime = new Date(params.slotStart as string);
+      const endTime = new Date(startTime.getTime() + 30 * 60 * 1000); // Add 30 minutes
+      
+      const timeOptions: Intl.DateTimeFormatOptions = { 
+        hour: 'numeric', 
+        minute: '2-digit', 
+        hour12: true 
+      };
+      
+      const startTimeStr = startTime.toLocaleTimeString('en-US', timeOptions);
+      const endTimeStr = endTime.toLocaleTimeString('en-US', timeOptions);
+      
+      return `Today, ${startTimeStr} – ${endTimeStr}`;
+    }
+    return ORDER_SUMMARY.timeSlot; // fallback to mock data
+  };
   
   return (
-    <Screen>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Review Order</Title>
         
@@ -72,7 +94,7 @@ export default function PriceScreen() {
                   <Ionicons name="time" size={16} color="#6b7280" />
                   <View className="flex-1">
                     <Text className="text-sm text-gray-500">Time Slot</Text>
-                    <Text className="text-gray-900">{ORDER_SUMMARY.timeSlot}</Text>
+                    <Text className="text-gray-900">{formatTimeSlot()}</Text>
                   </View>
                 </View>
               </View>
@@ -110,6 +132,6 @@ export default function PriceScreen() {
           </Button>
         </Link>
       </StickyFooter>
-    </Screen>
+    </SafeAreaView>
   );
 }
