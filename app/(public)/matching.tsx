@@ -3,7 +3,7 @@ import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Badge from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
+import { AppButton as Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import Title from '../../components/ui/Title';
 import { fmtMoney } from '../../utils/format';
@@ -36,7 +36,7 @@ export default function MatchingScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Finding your pro…</Title>
-        
+
         <View className="mt-8 gap-4">
           {PROVIDERS.map((provider) => (
             <Card key={provider.id} testID={`provider-card-${provider.id}`}>
@@ -82,8 +82,8 @@ export default function MatchingScreen() {
 
                 {/* Action Button */}
                 <Link href="./confirm" asChild>
-                  <Button 
-                    variant="primary" 
+                  <Button
+                    variant="primary"
                     testID={`choose-${provider.id}`}
                     className="w-full"
                   >

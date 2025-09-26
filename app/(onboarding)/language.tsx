@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { router } from 'expo-router';
+import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Pressable, Text, View } from 'react-native';
 
@@ -11,26 +11,37 @@ const LANGUAGES = [
 ];
 
 export default function LanguageScreen() {
+  const router = useRouter();
+
   const handleLanguageSelection = async (languageCode: string) => {
     try {
       await AsyncStorage.setItem('language', languageCode);
       await AsyncStorage.setItem('onboardingCompleted', 'true');
-      
-      // Navigate to the main app
-      router.replace('/(public)');
+
+      // Check user type and navigate accordingly
+      const userType = await AsyncStorage.getItem('userType');
+      if (userType === 'provider') {
+        router.replace('/(provider)/onboarding');
+      } else {
+        router.replace('/(public)');
+      }
     } catch (error) {
-      console.error('Error saving language:', error);
+      console.error('Error saving language or navigating:', error);
     }
   };
 
   const goBack = () => {
-    router.back();
+    try {
+      router.back();
+    } catch (error) {
+      console.error('Navigation error:', error);
+    }
   };
 
   return (
     <View className="flex-1 bg-white">
       <StatusBar style="dark" />
-      
+
       {/* Header */}
       <View className="pt-12 pb-8 px-6">
         <View className="flex-row items-center justify-between">
@@ -43,7 +54,7 @@ export default function LanguageScreen() {
           </Pressable>
           <View className="flex-1" />
         </View>
-        
+
         <View className="mt-8">
           <Text className="text-3xl font-bold text-gray-900 mb-4">
             Choose Your Language
@@ -61,11 +72,10 @@ export default function LanguageScreen() {
             <Pressable
               key={language.code}
               testID={`btn-language-${language.code}`}
-              className={`rounded-2xl p-6 border-2 ${
-                language.enabled
-                  ? 'bg-white border-gray-200 active:opacity-90'
-                  : 'bg-gray-50 border-gray-100 opacity-60'
-              }`}
+              className={`rounded-2xl p-6 border-2 ${language.enabled
+                ? 'bg-white border-gray-200 active:opacity-90'
+                : 'bg-gray-50 border-gray-100 opacity-60'
+                }`}
               onPress={() => language.enabled && handleLanguageSelection(language.code)}
               disabled={!language.enabled}
             >
@@ -73,19 +83,17 @@ export default function LanguageScreen() {
                 <View className="flex-row items-center gap-4">
                   <Text className="text-3xl">{language.flag}</Text>
                   <View>
-                    <Text className={`text-xl font-semibold ${
-                      language.enabled ? 'text-gray-900' : 'text-gray-500'
-                    }`}>
+                    <Text className={`text-xl font-semibold ${language.enabled ? 'text-gray-900' : 'text-gray-500'
+                      }`}>
                       {language.name}
                     </Text>
-                    <Text className={`text-base ${
-                      language.enabled ? 'text-gray-600' : 'text-gray-400'
-                    }`}>
+                    <Text className={`text-base ${language.enabled ? 'text-gray-600' : 'text-gray-400'
+                      }`}>
                       {language.nativeName}
                     </Text>
                   </View>
                 </View>
-                
+
                 <View className="flex-row items-center gap-2">
                   {!language.enabled && (
                     <View className="bg-orange-100 px-3 py-1 rounded-full">
@@ -94,17 +102,17 @@ export default function LanguageScreen() {
                       </Text>
                     </View>
                   )}
-                  <Ionicons 
-                    name="chevron-forward" 
-                    size={20} 
-                    color={language.enabled ? "#9ca3af" : "#d1d5db"} 
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={language.enabled ? "#9ca3af" : "#d1d5db"}
                   />
                 </View>
               </View>
             </Pressable>
           ))}
         </View>
-        
+
         <View className="mt-8">
           <Text className="text-sm text-gray-500 text-center leading-5">
             You can change your language preference later in the app settings

@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '../../components/ui/Button';
+import { AppButton as Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import StarRating from '../../components/ui/StarRating';
 import StickyFooter from '../../components/ui/StickyFooter';
@@ -19,7 +19,7 @@ const RATING_CHIPS = [
 
 const RATING_LABELS = {
   1: 'Poor',
-  2: 'Okay', 
+  2: 'Okay',
   3: 'Good',
   4: 'Great!',
   5: 'Excellent!'
@@ -30,8 +30,8 @@ export default function RateScreen() {
   const [selectedChips, setSelectedChips] = useState<string[]>([]);
 
   const toggleChip = (chipId: string) => {
-    setSelectedChips(prev => 
-      prev.includes(chipId) 
+    setSelectedChips(prev =>
+      prev.includes(chipId)
         ? prev.filter(id => id !== chipId)
         : [...prev, chipId]
     );
@@ -45,7 +45,7 @@ export default function RateScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Rate your service</Title>
-        
+
         {/* Star Rating */}
         <View className="mt-8">
           <Card>
@@ -79,16 +79,14 @@ export default function RateScreen() {
                       <Pressable
                         key={chip.id}
                         onPress={() => toggleChip(chip.id)}
-                        className={`px-4 py-2 rounded-full border transition-colors ${
-                          isSelected
+                        className={`px-4 py-2 rounded-full border transition-colors ${isSelected
                             ? 'bg-blue-50 border-blue-200'
                             : 'bg-white border-gray-200'
-                        }`}
+                          }`}
                         testID={`chip-${chip.id}`}
                       >
-                        <Text className={`text-sm font-medium ${
-                          isSelected ? 'text-blue-700' : 'text-gray-600'
-                        }`}>
+                        <Text className={`text-sm font-medium ${isSelected ? 'text-blue-700' : 'text-gray-600'
+                          }`}>
                           {chip.label}
                         </Text>
                       </Pressable>
@@ -106,7 +104,7 @@ export default function RateScreen() {
             <View className="gap-3">
               <Text className="text-lg font-semibold text-gray-900">Additional feedback</Text>
               <View className="border-t border-gray-200 pt-3">
-                <Pressable 
+                <Pressable
                   className="bg-gray-50 rounded-lg p-4 min-h-[80px] justify-start border border-gray-200"
                   testID="feedback-input"
                 >
@@ -117,12 +115,12 @@ export default function RateScreen() {
           </Card>
         </View>
       </View>
-      
+
       {/* Sticky Footer */}
       <StickyFooter>
-        <Button 
-          variant="primary" 
-          testID="submit-rating" 
+        <Button
+          variant="primary"
+          testID="submit-rating"
           className="w-full"
           onPress={handleSubmit}
         >

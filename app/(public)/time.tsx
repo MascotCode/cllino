@@ -4,7 +4,7 @@ import { FlatList, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import Badge from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { AppButton as Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { SegmentPills } from '@/components/ui/SegmentPills';
 import StickyFooter from '@/components/ui/StickyFooter';
@@ -14,7 +14,7 @@ import { generateSlots, type Slot } from '@/lib/time/slots';
 
 // Constants
 const TIMEZONE = 'Africa/Casablanca';
-const HOURS = { start: 9, end: 18 };
+const HOURS = { start: 9, end: 21 };
 const STEP_MIN = 30;
 const LEAD_MIN = 15;
 const ETA_RANGE = '≈15–25 min';
@@ -23,7 +23,7 @@ export default function TimeScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const flatListRef = useRef<FlatList>(null);
-  
+
   // State
   const [mode, setMode] = useState<'now' | 'today'>('now');
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -53,9 +53,9 @@ export default function TimeScreen() {
         const firstEnabledIdx = slots.findIndex(s => !s.disabled);
         if (firstEnabledIdx >= 0 && flatListRef.current) {
           try {
-            flatListRef.current.scrollToIndex({ 
-              index: firstEnabledIdx, 
-              animated: true 
+            flatListRef.current.scrollToIndex({
+              index: firstEnabledIdx,
+              animated: true
             });
           } catch (error) {
             // Fallback if scrollToIndex fails
@@ -63,7 +63,7 @@ export default function TimeScreen() {
           }
         }
       }, 100);
-      
+
       return () => clearTimeout(timeoutId);
     }
   }, [slots, mode]);
@@ -84,7 +84,7 @@ export default function TimeScreen() {
 
   const handleContinue = () => {
     const existingParams = new URLSearchParams();
-    
+
     // Preserve existing search params
     Object.entries(params).forEach(([key, value]) => {
       if (typeof value === 'string') {
@@ -120,22 +120,22 @@ export default function TimeScreen() {
         accessibilityState={{ disabled: isDisabled }}
         className={`
           flex-1 min-h-[48px] mx-1 mb-2 px-3 py-2 rounded-xl border items-center justify-center
-          ${isDisabled 
-            ? 'bg-gray-50 border-gray-100 opacity-50' 
-            : isSelected 
-            ? 'bg-blue-50 border-blue-300' 
-            : 'bg-white border-gray-200'
+          ${isDisabled
+            ? 'bg-gray-50 border-gray-100 opacity-50'
+            : isSelected
+              ? 'bg-blue-50 border-blue-300'
+              : 'bg-white border-gray-200'
           }
         `}
       >
-        <Text 
+        <Text
           className={`
             text-sm text-center
-            ${isDisabled 
-              ? 'text-gray-400' 
-              : isSelected 
-              ? 'text-blue-700 font-semibold' 
-              : 'text-gray-900'
+            ${isDisabled
+              ? 'text-gray-400'
+              : isSelected
+                ? 'text-blue-700 font-semibold'
+                : 'text-gray-900'
             }
           `}
         >
@@ -173,7 +173,7 @@ export default function TimeScreen() {
               <Badge variant="success" className="mb-3">
                 {ETA_RANGE}
               </Badge>
-              <Text className="text-base text-center text-gray-600 leading-6">
+              <Text className="text-base leading-6 text-center text-gray-600">
                 We'll start as soon as possible
               </Text>
             </View>
@@ -183,7 +183,7 @@ export default function TimeScreen() {
             {!hasAvailableSlots ? (
               <Card>
                 <View className="items-center py-6">
-                  <Text className="text-base text-center text-gray-700 leading-6">
+                  <Text className="text-base leading-6 text-center text-gray-700">
                     No slots left today. Please choose Now or try earlier tomorrow.
                   </Text>
                 </View>

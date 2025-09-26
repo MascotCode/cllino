@@ -1,5 +1,7 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, {
+  BottomSheetScrollView
+} from '@gorhom/bottom-sheet';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
@@ -10,16 +12,22 @@ import type { RouteEntryModalRef } from '../../components/search/RouteEntryModal
 import RouteEntryModal from '../../components/search/RouteEntryModal';
 import AmountInput from '../../components/ui/AmountInput';
 import type { Place } from '../../types/places';
-import { computePricing, roundTo5, type CarSize, type PricingBreakdown } from '../../utils/pricing';
+import { computePricing, type CarSize, type PricingBreakdown } from '../../utils/pricing';
 
 // Tiny util to render money like "35 MAD"
 const fmtMoney = (amount: number, currency = 'MAD') => `${amount} ${currency}`;
 
+// Simple toast helper for one-time messages
+const toastOnce = (message: string) => {
+  console.log(`[Toast]: ${message}`);
+  // In a real app, you'd use a toast library here
+};
+
 const SERVICES = [
-  { id: 'basic', title: 'Basic Cleaning', desc: 'Essential wash & dry for your vehicle', price: 15, duration: 30, icon: (c='#2563eb') => <Ionicons name="car" size={20} color={c} /> },
-  { id: 'deep', title: 'Deep Cleaning', desc: 'Thorough interior & exterior detailing', price: 35, duration: 90, icon: (c='#2563eb') => <MaterialIcons name="auto-fix-high" size={20} color={c} /> },
-  { id: 'interior', title: 'Interior Detailing', desc: 'Complete interior restoration', price: 25, duration: 60, icon: (c='#2563eb') => <MaterialIcons name="corporate-fare" size={20} color={c} /> },
-  { id: 'premium', title: 'Premium Package', desc: 'Full service with wax & protection', price: 55, duration: 120, icon: (c='#2563eb') => <MaterialIcons name="diamond" size={20} color={c} /> },
+  { id: 'basic', title: 'Basic Cleaning', desc: 'Essential wash & dry for your vehicle', price: 15, duration: 30, icon: (c = '#2563eb') => <Ionicons name="car" size={20} color={c} /> },
+  { id: 'deep', title: 'Deep Cleaning', desc: 'Thorough interior & exterior detailing', price: 35, duration: 90, icon: (c = '#2563eb') => <MaterialIcons name="auto-fix-high" size={20} color={c} /> },
+  { id: 'interior', title: 'Interior Detailing', desc: 'Complete interior restoration', price: 25, duration: 60, icon: (c = '#2563eb') => <MaterialIcons name="corporate-fare" size={20} color={c} /> },
+  { id: 'premium', title: 'Premium Package', desc: 'Full service with wax & protection', price: 55, duration: 120, icon: (c = '#2563eb') => <MaterialIcons name="diamond" size={20} color={c} /> },
 ];
 
 const CAR_SIZES = [
@@ -37,14 +45,15 @@ export default function ServiceHome() {
   const snapPoints = useMemo(() => ['45%'], []); // Fixed single snap point
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressLabel, setAddressLabel] = useState<string>('Set pickup location');
-  
+
   // Car selection state
   const [sheetView, setSheetView] = useState<SheetView>('services');
   const [selectedService, setSelectedService] = useState<typeof SERVICES[0] | null>(null);
   const [carSize, setCarSize] = useState<CarSize>('compact');
   const [vehicleCount, setVehicleCount] = useState<number>(1);
-  
+
   // Pricing state
+  const [userEditedPrice, setUserEditedPrice] = useState<boolean>(false);
   const [priceTotal, setPriceTotal] = useState<number>(0);
   const [showSoftCap, setShowSoftCap] = useState<boolean>(false);
   const [pendingAbsMax, setPendingAbsMax] = useState<number | null>(null);
@@ -145,6 +154,7 @@ export default function ServiceHome() {
   // Car selection handlers
   const onSelectService = (service: typeof SERVICES[0]) => {
     setSelectedService(service);
+    setUserEditedPrice(false); // Reset to fair default for new service
     setSheetView('car-selection');
   };
 
@@ -158,28 +168,31 @@ export default function ServiceHome() {
     setShowMinWarning(true);
   };
 
+  // Helper functions for clamping and rounding
+  const clamp = (v: number, lo: number, hi: number) => Math.min(Math.max(v, lo), hi);
+  const roundToStep = (v: number, step: number) => Math.round(v / step) * step;
+
   // Pricing recalculation effect
   useEffect(() => {
     if (!selectedService) return;
-    
+
     const b = computePricing({
       serviceId: selectedService.id,
       carSize,
       vehicleCount,
     });
-    
+
     setBreakdown(b);
     setEffectiveAbsMax(b.absMaxTotal);
-    
+
     setPriceTotal(prev => {
-      if (!prev || prev < b.minTotal) return b.fairTotal;
-      // Keep user's higher choice without capping
-      return prev;
+      const base = userEditedPrice ? prev : b.fairTotal; // Key change: default to fair
+      return clamp(roundToStep(base, 5), b.minTotal, b.absMaxTotal);
     });
-    
+
     // Update soft cap note will be handled in the onChange callback
-  }, [selectedService, carSize, vehicleCount]);
-  
+  }, [selectedService, carSize, vehicleCount, userEditedPrice]);
+
   // Update soft cap and min warning when price changes
   useEffect(() => {
     if (breakdown) {
@@ -194,13 +207,13 @@ export default function ServiceHome() {
       // Allow the higher price after confirmation
       setPriceTotal(pendingAbsMax);
       setShowSoftCap(pendingAbsMax > breakdown.typicalMaxTotal);
-      
+
       // Raise the effective absMax to allow further increases from this new level
       setEffectiveAbsMax(Math.max(effectiveAbsMax, pendingAbsMax + 50)); // Allow 50 MAD more increases
     }
     setPendingAbsMax(null);
   };
-  
+
   const onCancelHighPrice = () => {
     if (breakdown) {
       setPriceTotal(breakdown.typicalMaxTotal);
@@ -211,7 +224,7 @@ export default function ServiceHome() {
 
   const onContinue = () => {
     if (!selectedService || !breakdown) return;
-    
+
     const query = new URLSearchParams({
       serviceId: selectedService.id,
       carSize,
@@ -278,7 +291,7 @@ export default function ServiceHome() {
       <Pressable
         testID="tid.map.locateFab"
         onPress={onUseMyLocation}
-        className="absolute top-24 right-4 w-12 h-12 rounded-full bg-white items-center justify-center border border-gray-200 shadow-sm"
+        className="absolute items-center justify-center w-12 h-12 bg-white border border-gray-200 rounded-full shadow-sm top-24 right-4"
         style={{ zIndex: 30 }}
       >
         <Ionicons name="locate" size={20} color="#2563EB" />
@@ -295,40 +308,42 @@ export default function ServiceHome() {
         enableHandlePanningGesture={false}
         enableContentPanningGesture={true}
         handleStyle={{ backgroundColor: '#fff', borderTopLeftRadius: 16, borderTopRightRadius: 16 }}
+        keyboardBehavior="interactive"
+        keyboardBlurBehavior="restore"
+        containerStyle={{ padding: 0 }}
       >
-        <BottomSheetScrollView 
+        <BottomSheetScrollView
           testID="tid.home.sheet"
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 24 }}
         >
           {sheetView === 'services' ? (
             <>
               {/* Search bar - tappable to open modal */}
               <Pressable
                 onPress={openRouteModal}
-                className="flex-row items-center bg-white border border-gray-200 rounded-2xl px-4 py-3 active:opacity-80"
+                className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-2xl active:opacity-80"
                 testID="search-pill"
               >
                 <Ionicons name="search" size={18} color="#6B7280" />
-                <Text className="ml-2 flex-1 text-gray-900" numberOfLines={1}>
+                <Text className="flex-1 ml-2 text-gray-900" numberOfLines={1}>
                   {addressLabel || 'Enter pickup or service location'}
                 </Text>
               </Pressable>
 
               {/* Segment */}
-              <View className="mt-4 flex-row bg-gray-100 p-1 rounded-full">
-                <Pressable className="flex-1 bg-white rounded-full py-2 items-center">
+              <View className="flex-row p-1 mt-4 bg-gray-100 rounded-full">
+                <Pressable className="items-center flex-1 py-2 bg-white rounded-full">
                   <View className="flex-row items-center gap-2">
                     <Ionicons name="car" size={16} color="#2563eb" />
                     <Text className="text-sm font-semibold text-gray-900">Car Wash</Text>
                   </View>
                 </Pressable>
-                <Pressable className="flex-1 py-2 items-center opacity-50" disabled>
+                <Pressable className="items-center flex-1 py-2 opacity-50" disabled>
                   <View className="flex-row items-center gap-2">
                     <Ionicons name="bicycle" size={16} color="#6b7280" />
                     <Text className="text-sm text-gray-600">Motorcycle</Text>
                   </View>
                 </Pressable>
-                <Pressable className="flex-1 py-2 items-center opacity-50" disabled>
+                <Pressable className="items-center flex-1 py-2 opacity-50" disabled>
                   <View className="flex-row items-center gap-2">
                     <MaterialIcons name="local-shipping" size={16} color="#6b7280" />
                     <Text className="text-sm text-gray-600">Trucks</Text>
@@ -337,12 +352,12 @@ export default function ServiceHome() {
               </View>
 
               {/* Services */}
-              <View className="mt-6 gap-3">
+              <View className="gap-3 mt-6">
                 {SERVICES.map((svc) => (
                   <Pressable
                     key={svc.id}
                     onPress={() => onSelectService(svc)}
-                    className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm active:opacity-90"
+                    className="p-4 bg-white border border-gray-200 shadow-sm rounded-2xl active:opacity-90"
                     testID={`svc-${svc.id}`}
                   >
                     <View className="flex-row items-center justify-between">
@@ -351,7 +366,7 @@ export default function ServiceHome() {
                           {svc.icon()}
                           <Text className="text-base font-semibold text-gray-900">{svc.title}</Text>
                         </View>
-                        <Text className="text-gray-500 mt-1">{svc.desc}</Text>
+                        <Text className="mt-1 text-gray-500">{svc.desc}</Text>
                         <View className="flex-row items-center gap-4 mt-3">
                           <View className="flex-row items-center gap-1">
                             <MaterialIcons name="attach-money" size={16} color="#111827" />
@@ -376,8 +391,8 @@ export default function ServiceHome() {
             <>
               {/* Header */}
               <View className="flex-row items-center gap-3 mb-6">
-                <Pressable 
-                  onPress={onBackToServices} 
+                <Pressable
+                  onPress={onBackToServices}
                   className="p-2 -ml-2 rounded-full active:bg-gray-100"
                 >
                   <Ionicons name="chevron-back" size={20} color="#6B7280" />
@@ -398,7 +413,7 @@ export default function ServiceHome() {
                   <Ionicons name="car-sport" size={16} color="#6B7280" />
                   <Text className="text-sm font-medium text-gray-900">Car Size</Text>
                 </View>
-                <View className="flex-row gap-3 justify-center flex-wrap">
+                <View className="flex-row flex-wrap justify-center gap-3">
                   {CAR_SIZES.map((size) => {
                     const getCarIcon = (sizeId: string) => {
                       switch (sizeId) {
@@ -408,28 +423,29 @@ export default function ServiceHome() {
                         default: return 'car';
                       }
                     };
-                    
+
                     return (
                       <Pressable
                         key={size.id}
-                        onPress={() => setCarSize(size.id as CarSize)}
-                        className={`flex-1 min-w-[80px] px-3 py-3 rounded-2xl border items-center gap-2 ${
-                          carSize === size.id
-                            ? 'bg-blue-50 border-blue-500'
-                            : 'bg-white border-gray-200'
-                        }`}
+                        onPress={() => {
+                          setCarSize(size.id as CarSize);
+                          setUserEditedPrice(false); // Reset to fair default
+                        }}
+                        className={`flex-1 min-w-[80px] px-3 py-3 rounded-2xl border items-center gap-2 ${carSize === size.id
+                          ? 'bg-blue-50 border-blue-500'
+                          : 'bg-white border-gray-200'
+                          }`}
                       >
-                        <Ionicons 
-                          name={getCarIcon(size.id) as any} 
-                          size={20} 
-                          color={carSize === size.id ? '#3B82F6' : '#6B7280'} 
+                        <Ionicons
+                          name={getCarIcon(size.id) as any}
+                          size={20}
+                          color={carSize === size.id ? '#3B82F6' : '#6B7280'}
                         />
                         <Text
-                          className={`text-xs font-medium ${
-                            carSize === size.id
-                              ? 'text-blue-700'
-                              : 'text-gray-700'
-                          }`}
+                          className={`text-xs font-medium ${carSize === size.id
+                            ? 'text-blue-700'
+                            : 'text-gray-700'
+                            }`}
                         >
                           {size.label}
                         </Text>
@@ -456,6 +472,7 @@ export default function ServiceHome() {
                     onChange={(next) => {
                       const clamped = Math.max(1, Math.min(5, next));
                       setVehicleCount(clamped);
+                      setUserEditedPrice(false); // Reset to fair default
                     }}
                     onClampMin={() => {
                       // Optional: could show a toast that minimum is 1 vehicle
@@ -469,66 +486,65 @@ export default function ServiceHome() {
               </View>
 
               {/* Pricing Summary */}
-              <View className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl p-5 mb-8 border border-gray-100">
+              <View className="p-5 mb-8 border border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl">
                 <View className="flex-row items-center gap-2 mb-3">
                   <MaterialIcons name="receipt" size={18} color="#6B7280" />
                   <Text className="text-sm font-medium text-gray-700">Pricing Summary</Text>
                 </View>
-                
+
                 {/* Interactive Price Section */}
                 {breakdown && (
                   <View className="mb-3">
-                    <Text className="text-base font-medium text-gray-900 mb-2">Estimated total</Text>
-                    
-                    <View className="flex-row items-center justify-center gap-3">
+                    <Text className="mb-2 text-base font-medium text-gray-900">Estimated total</Text>
+
+                    <View className="flex-row items-center gap-2">
                       <AmountInput
                         testID="tid.price"
                         value={priceTotal}
                         step={5}
-                        min={breakdown.minTotal}
-                        typicalMax={breakdown.typicalMaxTotal}
+                        min={breakdown?.minTotal ?? 0}
+                        typicalMax={breakdown?.typicalMaxTotal ?? 0}
                         absMax={effectiveAbsMax}
-                        onClampMin={showMinPriceWarning}
+                        onClampMin={() => toastOnce('That\'s the minimum for this service')}
                         onExceedAbsMax={(p) => setPendingAbsMax(p)}
-                        onChange={(next) => {
-                          const next5 = roundTo5(next);
-                          setPriceTotal(next5);
-                          setShowSoftCap(next5 > breakdown.typicalMaxTotal);
+                        onChange={(v) => {
+                          setUserEditedPrice(true);
+                          setPriceTotal(v);
                         }}
                       />
-                      <Text className="text-2xl font-bold text-blue-600">MAD</Text>
+                      <Text className="text-lg font-semibold text-blue-600">MAD</Text>
                     </View>
                   </View>
                 )}
-                
+
                 {/* Min/Typical Range */}
                 {breakdown && (
                   <View className="flex-row items-center gap-1 mb-2">
                     <Text className="text-xs text-gray-500" testID="tid.price.minBadge">
-                      Min {fmtMoney(breakdown.minTotal)} · 
+                      Min {fmtMoney(breakdown.minTotal)} ·
                     </Text>
                     <Text className="text-xs text-gray-500" testID="tid.price.typBadge">
                       Typical up to {fmtMoney(breakdown.typicalMaxTotal)}
                     </Text>
                   </View>
                 )}
-                
+
                 {/* Soft Cap Advisory */}
                 {showSoftCap && (
-                  <Text className="text-xs text-blue-600 mb-2" testID="tid.price.softcap">
+                  <Text className="mb-2 text-xs text-blue-600" testID="tid.price.softcap">
                     Above the typical range — that&apos;s okay, it may match faster.
                   </Text>
                 )}
-                
+
                 {/* Cash Payment */}
                 <View className="flex-row items-center gap-1">
                   <MaterialIcons name="payment" size={12} color="#6B7280" />
                   <Text className="text-xs text-gray-500">Cash on completion</Text>
                 </View>
-                
+
                 {/* Min Price Warning */}
                 {showMinWarning && (
-                  <View className="mt-2 bg-red-50 rounded-lg px-3 py-2" testID="tid.price.warning.min">
+                  <View className="px-3 py-2 mt-2 rounded-lg bg-red-50" testID="tid.price.warning.min">
                     <Text className="text-xs text-red-600">At minimum price</Text>
                   </View>
                 )}
@@ -537,10 +553,10 @@ export default function ServiceHome() {
               {/* Continue Button */}
               <Pressable
                 onPress={onContinue}
-                className="bg-blue-600 rounded-2xl py-4 items-center shadow-sm active:bg-blue-700"
+                className="items-center py-4 bg-blue-600 shadow-sm rounded-2xl active:bg-blue-700"
               >
                 <View className="flex-row items-center gap-2">
-                  <Text className="text-white font-semibold text-base">Review Order</Text>
+                  <Text className="text-base font-semibold text-white">Review Order</Text>
                   <Ionicons name="arrow-forward" size={16} color="white" />
                 </View>
               </Pressable>
@@ -552,11 +568,11 @@ export default function ServiceHome() {
       {/* Route Entry Modal */}
       <RouteEntryModal
         ref={routeModalRef}
-        onDismiss={() => {}}
+        onDismiss={() => { }}
         onSelectPlace={onSelectPlace}
         onChooseOnMap={onChooseOnMap}
       />
-      
+
       {/* Fat-finger Confirmation Modal */}
       <Modal
         visible={pendingAbsMax !== null}
@@ -564,24 +580,24 @@ export default function ServiceHome() {
         animationType="fade"
         onRequestClose={onCancelHighPrice}
       >
-        <View className="flex-1 bg-black/50 justify-center items-center px-6">
-          <View className="bg-white rounded-2xl p-6 w-full max-w-sm" testID="tid.price.confirm.absMax">
-            <Text className="text-lg font-bold text-gray-900 mb-2">Unusual price</Text>
-            <Text className="text-gray-600 mb-6">
+        <View className="items-center justify-center flex-1 px-6 bg-black/50">
+          <View className="w-full max-w-sm p-6 bg-white rounded-2xl" testID="tid.price.confirm.absMax">
+            <Text className="mb-2 text-lg font-bold text-gray-900">Unusual price</Text>
+            <Text className="mb-6 text-gray-600">
               This is much higher than typical ({breakdown ? fmtMoney(breakdown.typicalMaxTotal) : ''} MAD). Continue with {pendingAbsMax ? fmtMoney(pendingAbsMax) : ''} MAD?
             </Text>
             <View className="flex-row gap-3">
               <Pressable
                 onPress={onCancelHighPrice}
-                className="flex-1 py-3 px-4 bg-gray-100 rounded-xl items-center active:bg-gray-200"
+                className="items-center flex-1 px-4 py-3 bg-gray-100 rounded-xl active:bg-gray-200"
               >
-                <Text className="text-gray-700 font-medium">Cancel</Text>
+                <Text className="font-medium text-gray-700">Cancel</Text>
               </Pressable>
               <Pressable
                 onPress={onConfirmHighPrice}
-                className="flex-1 py-3 px-4 bg-blue-600 rounded-xl items-center active:bg-blue-700"
+                className="items-center flex-1 px-4 py-3 bg-blue-600 rounded-xl active:bg-blue-700"
               >
-                <Text className="text-white font-medium">Continue</Text>
+                <Text className="font-medium text-white">Continue</Text>
               </Pressable>
             </View>
           </View>

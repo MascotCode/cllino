@@ -37,9 +37,9 @@ const PROFILE_SECTIONS = [
 export default function ProfileScreen() {
   return (
     <View className="flex-1 bg-white">
-      <ScrollView className="flex-1 px-4 pt-12">
+      <ScrollView className="flex-1 px-4 mt-12" contentContainerClassName='pb-12' stickyHeaderIndices={[0]}>
         {/* Header */}
-        <View className="mb-8">
+        <View className="mb-8 bg-white flex-1 h-24 py-6">
           <Text className="text-2xl font-bold text-gray-900">Profile</Text>
           <Text className="text-gray-600 mt-1">Manage your account and preferences</Text>
         </View>

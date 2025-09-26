@@ -30,7 +30,7 @@ const SUPPORT_OPTIONS = [
 
 export default function SupportScreen() {
   return (
-    <View className="flex-1 bg-white">
+    <View className="flex-1 bg-white  pt-6">
       <ScrollView className="flex-1 px-4 pt-12">
         {/* Header */}
         <View className="mb-8">

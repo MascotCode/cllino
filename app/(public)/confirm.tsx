@@ -3,7 +3,7 @@ import { Link } from 'expo-router';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Badge from '../../components/ui/Badge';
-import { Button } from '../../components/ui/Button';
+import { AppButton as Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
 import StickyFooter from '../../components/ui/StickyFooter';
 import Title from '../../components/ui/Title';
@@ -30,7 +30,7 @@ export default function ConfirmScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Provider assigned</Title>
-        
+
         {/* Provider Status Card */}
         <View className="mt-8">
           <Card testID={`provider-card-${ASSIGNED_PROVIDER.id}`}>
@@ -85,18 +85,16 @@ export default function ConfirmScreen() {
                   <View className="flex-row justify-between">
                     {TIMELINE_STEPS.map((step, index) => (
                       <View key={step.label} className="items-center">
-                        <View className={`w-6 h-6 rounded-full border-2 ${
-                          step.completed 
-                            ? 'bg-blue-600 border-blue-600' 
+                        <View className={`w-6 h-6 rounded-full border-2 ${step.completed
+                            ? 'bg-blue-600 border-blue-600'
                             : 'bg-white border-gray-300'
-                        } items-center justify-center`}>
+                          } items-center justify-center`}>
                           {step.completed && (
                             <Ionicons name="checkmark" size={14} color="white" />
                           )}
                         </View>
-                        <Text className={`text-xs mt-2 text-center max-w-16 ${
-                          step.completed ? 'text-blue-600 font-medium' : 'text-gray-500'
-                        }`}>
+                        <Text className={`text-xs mt-2 text-center max-w-16 ${step.completed ? 'text-blue-600 font-medium' : 'text-gray-500'
+                          }`}>
                           {step.label}
                         </Text>
                       </View>
@@ -108,7 +106,7 @@ export default function ConfirmScreen() {
           </Card>
         </View>
       </View>
-      
+
       {/* Sticky Footer */}
       <StickyFooter>
         <Link href="./rate" asChild>

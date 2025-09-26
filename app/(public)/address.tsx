@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button } from '../../components/ui/Button';
+import { AppButton as Button } from '../../components/ui/Button';
 import Title from '../../components/ui/Title';
 
 // MOCK DATA
@@ -29,7 +29,7 @@ export default function AddressScreen() {
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
         <Title>Select Address</Title>
-        
+
         <View className="mt-8 gap-3">
           {SAVED_ADDRESSES.map((addr) => {
             const handleAddressSelect = () => {
@@ -74,7 +74,7 @@ export default function AddressScreen() {
         </View>
 
         <View className="border-t border-gray-200 pt-4 mt-6">
-          <Pressable 
+          <Pressable
             testID="add-address"
             className="bg-white rounded-xl border border-gray-200 p-4 shadow-sm active:opacity-90 border-dashed"
           >
@@ -84,7 +84,7 @@ export default function AddressScreen() {
             </View>
           </Pressable>
         </View>
-        
+
         <View className="mt-8">
           <Button variant="subtle" testID="use-current-location">
             📍 Use Current Location

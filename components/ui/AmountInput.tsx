@@ -1,7 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
+import { BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import * as Haptics from 'expo-haptics';
-import { useCallback, useRef, useState } from 'react';
-import { Pressable, TextInput, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Pressable, View } from 'react-native';
 import { roundTo5 } from '../../utils/pricing';
 
 export interface AmountInputProps {
@@ -28,6 +29,7 @@ export default function AmountInput({
   testID = 'amount-input',
 }: AmountInputProps) {
   const [inputText, setInputText] = useState(value.toString());
+  const [isEditing, setIsEditing] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const repeatTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -48,31 +50,52 @@ export default function AmountInput({
     const cleaned = text.replace(/[^\d]/g, ''); // Strip non-digits
     const parsed = parseInt(cleaned || '0', 10);
     const rounded = roundTo5(parsed);
-    return Math.max(min, Math.min(absMax, rounded));
+
+    // Only enforce minimum, let absMax check happen in onTextSubmit
+    return Math.max(min, rounded);
   };
 
   // Handle text input changes
   const onTextChange = (text: string) => {
     setInputText(text);
+    setIsEditing(true);
   };
 
   // Handle text input submit/blur
   const onTextSubmit = () => {
-    const newValue = parseAndValidate(inputText);
-    setInputText(newValue.toString());
-    
-    if (newValue === min && parseInt(inputText.replace(/[^\d]/g, '') || '0', 10) < min) {
+    const cleaned = inputText.replace(/[^\d]/g, '');
+    const parsed = parseInt(cleaned || '0', 10);
+    const proposedValue = Math.max(min, parsed);
+
+    setIsEditing(false);
+
+    // Check for absMax exceedance BEFORE capping
+    if (proposedValue > absMax) {
+      onExceedAbsMax?.(proposedValue);
+      // Don't reset the input - let the parent component handle the modal and decision
+      return;
+    }
+
+    // Check for minimum clamp
+    if (proposedValue === min && parsed < min) {
       onClampMin?.();
     }
-    
-    onChange(newValue);
+
+    setInputText(proposedValue.toString());
+    onChange(proposedValue);
   };
 
-  // Sync input text when value changes externally
-  const currentValueStr = value.toString();
-  if (inputText !== currentValueStr && !inputText.includes('.')) {
-    setInputText(currentValueStr);
-  }
+  // Handle text input focus
+  const onTextFocus = () => {
+    setIsEditing(true);
+  };
+
+  // Sync input text when value changes externally (but not when user is editing)
+  useEffect(() => {
+    if (!isEditing) {
+      setInputText(value.toString());
+    }
+  }, [value, isEditing]);
 
   // Optimized haptics - non-blocking
   const triggerHaptics = useCallback(() => {
@@ -88,13 +111,14 @@ export default function AmountInput({
   const handleDecrease = useCallback(() => {
     const proposed = value - step;
     const newValue = Math.max(min, proposed);
-    
+
     if (newValue === min && proposed < min) {
       onClampMin?.();
     } else {
       triggerHaptics();
     }
-    
+
+    setIsEditing(false); // Mark as not editing since this is programmatic
     onChange(newValue);
     setInputText(newValue.toString());
   }, [value, step, min, onChange, onClampMin, triggerHaptics]);
@@ -102,12 +126,13 @@ export default function AmountInput({
   // Increase handler
   const handleIncrease = useCallback(() => {
     const proposed = value + step;
-    
+
     if (proposed > absMax) {
       onExceedAbsMax?.(proposed);
       return;
     }
-    
+
+    setIsEditing(false); // Mark as not editing since this is programmatic
     triggerHaptics();
     onChange(proposed);
     setInputText(proposed.toString());
@@ -117,7 +142,7 @@ export default function AmountInput({
   const startRepeat = useCallback((action: () => void) => {
     clearTimers(); // Clear any existing timers
     action(); // Execute immediately on press down
-    
+
     longPressTimer.current = setTimeout(() => {
       repeatTimer.current = setInterval(() => {
         action();
@@ -138,11 +163,10 @@ export default function AmountInput({
         onPressOut={stopRepeat}
         onTouchEnd={stopRepeat}
         hitSlop={10}
-        className={`w-10 h-10 rounded-full items-center justify-center ${
-          value <= min
-            ? 'bg-gray-100'
-            : 'bg-blue-100 active:bg-blue-200'
-        }`}
+        className={`w-10 h-10 rounded-full items-center justify-center ${value <= min
+          ? 'bg-gray-100'
+          : 'bg-blue-100 active:bg-blue-200'
+          }`}
         disabled={value <= min}
       >
         <Ionicons
@@ -153,19 +177,19 @@ export default function AmountInput({
       </Pressable>
 
       {/* Text Input */}
-      <TextInput
+      <BottomSheetTextInput
         testID={`${testID}.input`}
         value={inputText}
         onChangeText={onTextChange}
+        onFocus={onTextFocus}
         onSubmitEditing={onTextSubmit}
         onBlur={onTextSubmit}
         keyboardType="number-pad"
         returnKeyType="done"
         maxLength={6}
-        className="min-w-[80px] text-2xl font-bold text-blue-600 text-center px-2"
+        className="min-w-[80px] text-3xl font-bold text-blue-600 text-center px-2"
         style={{ textAlign: 'center' }}
       />
-
       {/* Increase Button */}
       <Pressable
         testID={`${testID}.inc`}
@@ -173,7 +197,7 @@ export default function AmountInput({
         onPressOut={stopRepeat}
         onTouchEnd={stopRepeat}
         hitSlop={10}
-        className="w-10 h-10 rounded-full bg-blue-100 items-center justify-center active:bg-blue-200"
+        className="items-center justify-center w-10 h-10 bg-blue-100 rounded-full active:bg-blue-200"
       >
         <Ionicons name="add" size={18} color="#3B82F6" />
       </Pressable>

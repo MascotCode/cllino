@@ -1,5 +1,5 @@
 import { Ionicons } from '@expo/vector-icons';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { router, usePathname } from 'expo-router';
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -20,16 +20,17 @@ const TAB_LABELS: Record<string, string> = {
   profile: 'Profile',
 };
 
-export default function FlatTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
+export default function FlatTabBar() {
   const insets = useSafeAreaInsets();
+  const pathname = usePathname();
 
-  // Define which routes should be visible in the tab bar
-  const VISIBLE_TAB_ROUTES = ['index', 'orders', 'support', 'profile'];
-
-  // Only show the main tab routes
-  const visibleRoutes = state.routes.filter((route) => 
-    VISIBLE_TAB_ROUTES.includes(route.name)
-  );
+  // Define the tab routes
+  const tabs = [
+    { name: 'index', href: '/(public)/', label: 'Home', icon: 'home' as keyof typeof Ionicons.glyphMap },
+    { name: 'orders', href: '/(public)/orders', label: 'Orders', icon: 'list' as keyof typeof Ionicons.glyphMap },
+    { name: 'support', href: '/(public)/support', label: 'Support', icon: 'help-circle' as keyof typeof Ionicons.glyphMap },
+    { name: 'profile', href: '/(public)/profile', label: 'Profile', icon: 'person' as keyof typeof Ionicons.glyphMap },
+  ];
 
   return (
     <View
@@ -41,93 +42,49 @@ export default function FlatTabBar({ state, descriptors, navigation }: BottomTab
       }}
     >
       <View className="flex-row h-16">
-        {visibleRoutes.map((route, index) => {
-          const routeIndex = state.routes.findIndex(r => r.key === route.key);
-          const { options } = descriptors[route.key];
-          const isFocused = state.index === routeIndex;
-          
-          // Handle label - could be string or function
-          let label: string | React.ReactNode = TAB_LABELS[route.name];
-          if (!label && options.tabBarLabel) {
-            if (typeof options.tabBarLabel === 'function') {
-              label = options.tabBarLabel({
-                focused: isFocused,
-                color: isFocused ? '#1D4ED8' : '#6B7280',
-                position: 'below-icon',
-                children: route.name
-              });
-            } else {
-              label = options.tabBarLabel;
-            }
-          }
-          if (!label) {
-            label = route.name;
-          }
-          
-          const iconName = TAB_ICONS[route.name] || 'ellipse';
+        {tabs.map((tab) => {
+          const isFocused = pathname === tab.href || (tab.name === 'index' && pathname === '/(public)');
           const iconColor = isFocused ? '#1D4ED8' : '#6B7280';
           const labelColor = isFocused ? '#1D4ED8' : '#6B7280';
 
           const onPress = () => {
-            const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
-              canPreventDefault: true,
-            });
-
-            if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name, route.params);
-            }
+            router.push(tab.href as any);
           };
 
-          const onLongPress = () => {
-            navigation.emit({
-              type: 'tabLongPress',
-              target: route.key,
-            });
-          };
-
-          const testID = `tid.tabbar.item.${route.name === 'index' ? 'home' : route.name}`;
+          const testID = `tid.tabbar.item.${tab.name === 'index' ? 'home' : tab.name}`;
 
           return (
             <Pressable
-              key={route.key}
+              key={tab.name}
               testID={testID}
               accessibilityRole="button"
               accessibilityState={isFocused ? { selected: true } : {}}
-              accessibilityLabel={options.tabBarAccessibilityLabel}
+              accessibilityLabel={tab.label}
               onPress={onPress}
-              onLongPress={onLongPress}
-              className="flex-1 items-center justify-center"
+              className="items-center justify-center flex-1"
               style={{ minHeight: 44, minWidth: 44 }}
             >
               <View className="items-center justify-center">
                 {/* Icon with optional active background */}
-                <View 
-                  className={`items-center justify-center ${
-                    isFocused ? 'w-7 h-7 bg-blue-50 rounded-full' : ''
-                  }`}
+                <View
+                  className={`items-center justify-center ${isFocused ? 'w-7 h-7 bg-blue-50 rounded-full' : ''
+                    }`}
                 >
-                  <Ionicons 
-                    name={iconName} 
-                    size={20} 
-                    color={iconColor} 
+                  <Ionicons
+                    name={tab.icon}
+                    size={20}
+                    color={iconColor}
                   />
                 </View>
-                
+
                 {/* Label */}
-                {typeof label === 'string' ? (
-                  <Text
-                    className={`text-xs mt-1 ${
-                      isFocused ? 'font-medium' : 'font-normal'
+                <Text
+                  className={`text-xs mt-1 ${isFocused ? 'font-medium' : 'font-normal'
                     }`}
-                    style={{ color: labelColor }}
-                  >
-                    {label}
-                  </Text>
-                ) : (
-                  label
-                )}
+                  style={{ color: labelColor }}
+                >
+                  {tab.label}
+                </Text>
               </View>
             </Pressable>
           );
