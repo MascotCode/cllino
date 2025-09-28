@@ -188,7 +188,7 @@ export default function ProviderOnboarding() {
                 <Button
                     onPress={handleSubmit}
                     disabled={!isValid || loading}
-                    variant={isValid ? 'primary' : 'subtle'}
+                    className={isValid ? 'bg-blue-600 shadow-lg' : 'bg-gray-100 border border-gray-300'}
                     testID="prov.onb.submit"
                 >
                     {loading ? 'Setting up...' : 'Save & Go Online'}
