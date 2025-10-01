@@ -1,3 +1,4 @@
+import { CAR_SIZE_SURCHARGES, SERVICE_PRICING, type CarSize, type ServiceId } from '@/constants/pricing';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, {
   BottomSheetScrollView
@@ -5,17 +6,15 @@ import BottomSheet, {
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { Alert, Linking, Modal, Platform, Pressable, Text, View } from 'react-native';
 import MapView, { Camera, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import type { RouteEntryModalRef } from '../../components/search/RouteEntryModal';
 import RouteEntryModal from '../../components/search/RouteEntryModal';
 import AmountInput from '../../components/ui/AmountInput';
 import type { Place } from '../../types/places';
-import { computePricing, type CarSize, type PricingBreakdown } from '../../utils/pricing';
-
-// Tiny util to render money like "35 MAD"
-const fmtMoney = (amount: number, currency = 'MAD') => `${amount} ${currency}`;
+import { fmtMoney } from '../../utils/format';
+import { computePricing, type PricingBreakdown } from '../../utils/pricing';
 
 // Simple toast helper for one-time messages
 const toastOnce = (message: string) => {
@@ -23,17 +22,50 @@ const toastOnce = (message: string) => {
   // In a real app, you'd use a toast library here
 };
 
-const SERVICES = [
-  { id: 'basic', title: 'Basic Cleaning', desc: 'Essential wash & dry for your vehicle', price: 15, duration: 30, icon: (c = '#2563eb') => <Ionicons name="car" size={20} color={c} /> },
-  { id: 'deep', title: 'Deep Cleaning', desc: 'Thorough interior & exterior detailing', price: 35, duration: 90, icon: (c = '#2563eb') => <MaterialIcons name="auto-fix-high" size={20} color={c} /> },
-  { id: 'interior', title: 'Interior Detailing', desc: 'Complete interior restoration', price: 25, duration: 60, icon: (c = '#2563eb') => <MaterialIcons name="corporate-fare" size={20} color={c} /> },
-  { id: 'premium', title: 'Premium Package', desc: 'Full service with wax & protection', price: 55, duration: 120, icon: (c = '#2563eb') => <MaterialIcons name="diamond" size={20} color={c} /> },
+type ServiceOption = {
+  id: ServiceId;
+  title: string;
+  desc: string;
+  price: number;
+  duration: number;
+  icon: (color?: string) => ReactElement;
+};
+
+const SERVICES: ServiceOption[] = [
+  {
+    id: 'basic',
+    title: 'Basic Cleaning',
+    desc: 'Essential wash & dry for your vehicle',
+    icon: (c = '#2563eb') => <Ionicons name="car" size={20} color={c} />,
+    ...SERVICE_PRICING.basic,
+  },
+  {
+    id: 'deep',
+    title: 'Deep Cleaning',
+    desc: 'Thorough interior & exterior detailing',
+    icon: (c = '#2563eb') => <MaterialIcons name="auto-fix-high" size={20} color={c} />,
+    ...SERVICE_PRICING.deep,
+  },
+  {
+    id: 'interior',
+    title: 'Interior Detailing',
+    desc: 'Complete interior restoration',
+    icon: (c = '#2563eb') => <MaterialIcons name="corporate-fare" size={20} color={c} />,
+    ...SERVICE_PRICING.interior,
+  },
+  {
+    id: 'premium',
+    title: 'Premium Package',
+    desc: 'Full service with wax & protection',
+    icon: (c = '#2563eb') => <MaterialIcons name="diamond" size={20} color={c} />,
+    ...SERVICE_PRICING.premium,
+  },
 ];
 
-const CAR_SIZES = [
-  { id: 'compact', label: 'Compact', surcharge: 0 },
-  { id: 'suv', label: 'SUV', surcharge: 7 },
-  { id: 'van', label: 'Van', surcharge: 12 },
+const CAR_SIZES: Array<{ id: CarSize; label: string; surcharge: number }> = [
+  { id: 'compact', label: 'Compact', surcharge: CAR_SIZE_SURCHARGES.compact },
+  { id: 'suv', label: 'SUV', surcharge: CAR_SIZE_SURCHARGES.suv },
+  { id: 'van', label: 'Van', surcharge: CAR_SIZE_SURCHARGES.van },
 ];
 
 type SheetView = 'services' | 'car-selection';
@@ -48,7 +80,7 @@ export default function ServiceHome() {
 
   // Car selection state
   const [sheetView, setSheetView] = useState<SheetView>('services');
-  const [selectedService, setSelectedService] = useState<typeof SERVICES[0] | null>(null);
+  const [selectedService, setSelectedService] = useState<ServiceOption | null>(null);
   const [carSize, setCarSize] = useState<CarSize>('compact');
   const [vehicleCount, setVehicleCount] = useState<number>(1);
 
@@ -314,69 +346,70 @@ export default function ServiceHome() {
       >
         <BottomSheetScrollView
           testID="tid.home.sheet"
+          contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         >
           {sheetView === 'services' ? (
             <>
               {/* Search bar - tappable to open modal */}
               <Pressable
                 onPress={openRouteModal}
-                className="flex-row items-center px-4 py-3 bg-white border border-gray-200 rounded-2xl active:opacity-80"
+                className="flex-row items-center px-component py-element bg-surface-0 border border-border-subtle rounded-2xl active:opacity-80 shadow-subtle"
                 testID="search-pill"
               >
                 <Ionicons name="search" size={18} color="#6B7280" />
-                <Text className="flex-1 ml-2 text-gray-900" numberOfLines={1}>
+                <Text className="flex-1 ml-tight text-text-primary" numberOfLines={1}>
                   {addressLabel || 'Enter pickup or service location'}
                 </Text>
               </Pressable>
 
               {/* Segment */}
-              <View className="flex-row p-1 mt-4 bg-gray-100 rounded-full">
-                <Pressable className="items-center flex-1 py-2 bg-white rounded-full">
-                  <View className="flex-row items-center gap-2">
+              <View className="flex-row p-minimal mt-section bg-surface-100 rounded-full">
+                <Pressable className="items-center flex-1 py-tight bg-surface-0 rounded-full">
+                  <View className="flex-row items-center gap-tight">
                     <Ionicons name="car" size={16} color="#2563eb" />
-                    <Text className="text-sm font-semibold text-gray-900">Car Wash</Text>
+                    <Text className="text-sm font-semibold text-text-primary">Car Wash</Text>
                   </View>
                 </Pressable>
-                <Pressable className="items-center flex-1 py-2 opacity-50" disabled>
-                  <View className="flex-row items-center gap-2">
+                <Pressable className="items-center flex-1 py-tight opacity-50" disabled>
+                  <View className="flex-row items-center gap-tight">
                     <Ionicons name="bicycle" size={16} color="#6b7280" />
-                    <Text className="text-sm text-gray-600">Motorcycle</Text>
+                    <Text className="text-sm text-text-secondary">Motorcycle</Text>
                   </View>
                 </Pressable>
-                <Pressable className="items-center flex-1 py-2 opacity-50" disabled>
-                  <View className="flex-row items-center gap-2">
+                <Pressable className="items-center flex-1 py-tight opacity-50" disabled>
+                  <View className="flex-row items-center gap-tight">
                     <MaterialIcons name="local-shipping" size={16} color="#6b7280" />
-                    <Text className="text-sm text-gray-600">Trucks</Text>
+                    <Text className="text-sm text-text-secondary">Trucks</Text>
                   </View>
                 </Pressable>
               </View>
 
               {/* Services */}
-              <View className="gap-3 mt-6">
+              <View className="gap-element mt-section">
                 {SERVICES.map((svc) => (
                   <Pressable
                     key={svc.id}
                     onPress={() => onSelectService(svc)}
-                    className="p-4 bg-white border border-gray-200 shadow-sm rounded-2xl active:opacity-90"
+                    className="p-component bg-surface-0 border border-border-subtle shadow-card rounded-2xl active:opacity-90"
                     testID={`svc-${svc.id}`}
                   >
                     <View className="flex-row items-center justify-between">
-                      <View className="flex-1 pr-2">
-                        <View className="flex-row items-center gap-2">
+                      <View className="flex-1 pr-tight">
+                        <View className="flex-row items-center gap-tight">
                           {svc.icon()}
-                          <Text className="text-base font-semibold text-gray-900">{svc.title}</Text>
+                          <Text className="text-base font-semibold text-text-primary">{svc.title}</Text>
                         </View>
-                        <Text className="mt-1 text-gray-500">{svc.desc}</Text>
-                        <View className="flex-row items-center gap-4 mt-3">
-                          <View className="flex-row items-center gap-1">
+                        <Text className="mt-minimal text-text-secondary">{svc.desc}</Text>
+                        <View className="flex-row items-center gap-element mt-element">
+                          <View className="flex-row items-center gap-minimal">
                             <MaterialIcons name="attach-money" size={16} color="#111827" />
-                            <Text className="text-sm font-medium text-gray-900">
+                            <Text className="text-sm font-medium text-text-primary">
                               {fmtMoney(svc.price)}
                             </Text>
                           </View>
-                          <View className="flex-row items-center gap-1">
+                          <View className="flex-row items-center gap-minimal">
                             <Ionicons name="time-outline" size={16} color="#6b7280" />
-                            <Text className="text-sm text-gray-600">{svc.duration} mins</Text>
+                            <Text className="text-sm text-text-secondary">{svc.duration} mins</Text>
                           </View>
                         </View>
                       </View>
@@ -428,7 +461,7 @@ export default function ServiceHome() {
                       <Pressable
                         key={size.id}
                         onPress={() => {
-                          setCarSize(size.id as CarSize);
+                          setCarSize(size.id);
                           setUserEditedPrice(false); // Reset to fair default
                         }}
                         className={`flex-1 min-w-[80px] px-3 py-3 rounded-2xl border items-center gap-2 ${carSize === size.id

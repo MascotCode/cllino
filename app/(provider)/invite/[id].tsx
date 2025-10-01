@@ -1,278 +1,247 @@
-import { AppButton as Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import Badge from '@/components/ui/Badge';
 import Countdown from '@/components/ui/Countdown';
-import StarRating from '@/components/ui/StarRating';
+import { AppButton as Button } from '@/components/ui/Button';
+import MetricTile from '@/components/ui/MetricTile';
+import NoticeBanner from '@/components/ui/NoticeBanner';
 import StickyFooter from '@/components/ui/StickyFooter';
-import Title from '@/components/ui/Title';
 import { useProviderState } from '@/lib/provider/store';
 import { TInvite } from '@/lib/provider/types';
+import { tid } from '@/lib/testing/testIDs';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function InviteDetails() {
-    const { id } = useLocalSearchParams<{ id: string }>();
-    const [currentInvite, setCurrentInvite] = useState<TInvite | null>(null);
-    const [loading, setLoading] = useState(false);
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [currentInvite, setCurrentInvite] = useState<TInvite | null>(null);
+  const [loading, setLoading] = useState(false);
+  const insets = useSafeAreaInsets();
 
-    const {
-        invites,
-        acceptInvite,
-        declineInvite,
-        getTimeRemaining,
-        activeJob,
-        refreshJob
-    } = useProviderState();
+  const { invites, acceptInvite, declineInvite, getTimeRemaining, activeJob, refreshJob } = useProviderState();
 
-    // Find the current invite
-    useEffect(() => {
-        const invite = invites.find(inv => inv.id === id);
-        setCurrentInvite(invite || null);
-    }, [invites, id]);
+  useEffect(() => {
+    const invite = invites.find((inv) => inv.id === id);
+    setCurrentInvite(invite ?? null);
+  }, [invites, id]);
 
-    const handleAccept = async () => {
-        if (!currentInvite || loading) return;
+  const handleAccept = async () => {
+    if (!currentInvite || loading) return;
 
-        // Check if already have active job
-        if (activeJob) {
-            Alert.alert(
-                'Active Job',
-                'You already have an active job. Complete it before accepting new invitations.',
-                [{ text: 'OK' }]
-            );
-            return;
-        }
-
-        const timeRemaining = getTimeRemaining(currentInvite);
-        if (timeRemaining <= 0) {
-            Alert.alert(
-                'Invitation Expired',
-                'This invitation has expired and can no longer be accepted.',
-                [{ text: 'OK', onPress: () => router.back() }]
-            );
-            return;
-        }
-
-        setLoading(true);
-        try {
-            const job = acceptInvite(currentInvite.id);
-            if (job) {
-                refreshJob(); // Refresh job state
-                router.replace(`/(provider)/job/${job.id}`);
-            } else {
-                Alert.alert(
-                    'Unable to Accept',
-                    'This invitation is no longer available or you already have an active job.',
-                    [{ text: 'OK' }]
-                );
-            }
-        } catch (error) {
-            console.error('Failed to accept invite:', error);
-            Alert.alert('Error', 'Failed to accept invitation. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const handleDecline = () => {
-        if (!currentInvite || loading) return;
-
-        Alert.alert(
-            'Decline Invitation',
-            'Are you sure you want to decline this job invitation?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Decline',
-                    style: 'destructive',
-                    onPress: () => {
-                        declineInvite(currentInvite.id);
-                        router.back();
-                    }
-                }
-            ]
-        );
-    };
-
-    if (!currentInvite) {
-        return (
-            <SafeAreaView className="flex-1 bg-white">
-                <View className="flex-1 items-center justify-center px-4">
-                    <Card className="w-full">
-                        <View className="items-center py-8">
-                            <View className="w-16 h-16 bg-red-100 rounded-full items-center justify-center mb-4">
-                                <Ionicons name="close-circle" size={32} color="#ef4444" />
-                            </View>
-                            <Text className="text-xl font-semibold text-gray-900 mb-2">
-                                Invitation Not Found
-                            </Text>
-                            <Text className="text-gray-600 text-center mb-6">
-                                This invitation may have expired or been withdrawn.
-                            </Text>
-                            <Button onPress={() => router.back()} variant="primary">
-                                Back to Home
-                            </Button>
-                        </View>
-                    </Card>
-                </View>
-            </SafeAreaView>
-        );
+    if (activeJob) {
+      Alert.alert('Active job in progress', 'Complete your current job before accepting new invitations.', [{ text: 'OK' }]);
+      return;
     }
 
     const timeRemaining = getTimeRemaining(currentInvite);
-    const isExpired = timeRemaining <= 0;
+    if (timeRemaining <= 0) {
+      Alert.alert('Invitation expired', 'This invitation can no longer be accepted.', [{ text: 'OK', onPress: () => router.back() }]);
+      return;
+    }
 
+    setLoading(true);
+    try {
+      const job = acceptInvite(currentInvite.id);
+      if (job) {
+        refreshJob();
+        router.replace(`/(provider)/job/${job.id}`);
+      } else {
+        Alert.alert('Unable to accept', 'This invitation is no longer available.', [{ text: 'OK' }]);
+      }
+    } catch (error) {
+      console.error('Failed to accept invite:', error);
+      Alert.alert('Error', 'Failed to accept invitation. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDecline = () => {
+    if (!currentInvite || loading) return;
+
+    Alert.alert('Decline invitation', 'Are you sure you want to decline this job?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Decline',
+        style: 'destructive',
+        onPress: () => {
+          declineInvite(currentInvite.id);
+          router.back();
+        }
+      }
+    ]);
+  };
+
+  if (!currentInvite) {
     return (
-        <SafeAreaView className="flex-1 bg-white">
-            <ScrollView className="flex-1 px-4 pt-8">
-                <View className="mb-6">
-                    <Title className="text-center mb-4">Job Invitation</Title>
-                </View>
-
-                <Card className="mb-6">
-                    <View className="space-y-4">
-                        {/* Header with countdown */}
-                        <View className="flex-row items-center justify-between">
-                            <Text className="text-2xl font-bold text-gray-900">
-                                {currentInvite.customerName}
-                            </Text>
-                            <Countdown
-                                initialSeconds={timeRemaining}
-                                testID="invite-countdown"
-                            />
-                        </View>
-
-                        {/* Customer rating */}
-                        <View className="flex-row items-center space-x-2">
-                            <StarRating
-                                rating={currentInvite.rating}
-                                size={20}
-                                readonly
-                            />
-                            <Text className="text-sm text-gray-600 ml-2">
-                                {currentInvite.rating.toFixed(1)} customer rating
-                            </Text>
-                        </View>
-                    </View>
-                </Card>
-
-                {/* Location */}
-                <Card className="mb-6">
-                    <View className="space-y-3">
-                        <View className="flex-row items-center space-x-2">
-                            <Ionicons name="location" size={20} color="#3b82f6" />
-                            <Text className="text-lg font-semibold text-gray-900">
-                                Service Location
-                            </Text>
-                        </View>
-
-                        <Text className="text-gray-600 ml-7">
-                            {currentInvite.approxAddress}
-                        </Text>
-
-                        <View className="bg-amber-50 border border-amber-200 rounded-xl p-3 ml-7">
-                            <Text className="text-amber-800 text-sm">
-                                💡 Exact address will be revealed after accepting the job
-                            </Text>
-                        </View>
-                    </View>
-                </Card>
-
-                {/* Job Details */}
-                <Card className="mb-6">
-                    <View className="space-y-4">
-                        <Text className="text-lg font-semibold text-gray-900">
-                            Job Details
-                        </Text>
-
-                        <View className="grid grid-cols-2 gap-4">
-                            <View className="bg-green-50 border border-green-200 rounded-xl p-4 items-center">
-                                <Text className="text-2xl font-bold text-green-600">
-                                    {currentInvite.price} MAD
-                                </Text>
-                                <Text className="text-green-700 text-sm font-medium">
-                                    Cash Payment
-                                </Text>
-                            </View>
-
-                            <View className="bg-blue-50 border border-blue-200 rounded-xl p-4 items-center">
-                                <Text className="text-2xl font-bold text-blue-600">
-                                    {currentInvite.etaMinutes}m
-                                </Text>
-                                <Text className="text-blue-700 text-sm font-medium">
-                                    Estimated ETA
-                                </Text>
-                            </View>
-                        </View>
-                    </View>
-                </Card>
-
-                {/* Status message for expired or already have job */}
-                {(isExpired || activeJob) && (
-                    <Card className="mb-6 bg-red-50 border-red-200">
-                        <View className="flex-row items-start space-x-3">
-                            <View className="w-6 h-6 bg-red-500 rounded-full items-center justify-center mt-0.5">
-                                <Ionicons name="warning" size={14} color="white" />
-                            </View>
-                            <View className="flex-1">
-                                <Text className="text-red-900 font-semibold mb-1">
-                                    {isExpired ? 'Offer Expired' : 'Active Job in Progress'}
-                                </Text>
-                                <Text className="text-red-800 text-sm" testID="prov.invite.expired">
-                                    {isExpired
-                                        ? 'This invitation has expired and can no longer be accepted.'
-                                        : 'You already have an active job. Complete it before accepting new invitations.'
-                                    }
-                                </Text>
-                            </View>
-                        </View>
-                    </Card>
-                )}
-
-                {/* Cash payment reminder */}
-                <Card className="bg-amber-50 border-amber-200">
-                    <View className="flex-row items-start space-x-3">
-                        <View className="w-6 h-6 bg-amber-500 rounded-full items-center justify-center mt-0.5">
-                            <Ionicons name="cash" size={14} color="white" />
-                        </View>
-                        <View className="flex-1">
-                            <Text className="text-amber-900 font-medium mb-1">
-                                Cash Payment Required
-                            </Text>
-                            <Text className="text-amber-800 text-sm">
-                                Customer will pay in cash upon job completion. No digital payment is required.
-                            </Text>
-                        </View>
-                    </View>
-                </Card>
-            </ScrollView>
-
-            {/* Action buttons */}
-            <StickyFooter>
-                <View className="flex-row space-x-3">
-                    <View className="flex-1">
-                        <Button
-                            onPress={handleDecline}
-                            variant="subtle"
-                            disabled={loading}
-                            testID="prov.invite.decline"
-                        >
-                            Decline
-                        </Button>
-                    </View>
-                    <View className="flex-1">
-                        <Button
-                            onPress={handleAccept}
-                            variant="primary"
-                            disabled={isExpired || loading || !!activeJob}
-                            testID="prov.invite.accept"
-                        >
-                            {loading ? 'Accepting...' : 'Accept Job'}
-                        </Button>
-                    </View>
-                </View>
-            </StickyFooter>
-        </SafeAreaView>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center px-component">
+          <Card className="w-full max-w-md items-center gap-component" testID={tid.provider.invite.expired}>
+            <View className="h-16 w-16 items-center justify-center rounded-full bg-rose-100">
+              <Ionicons name="close-circle" size={30} color="#e11d48" />
+            </View>
+            <Text className="text-[22px] leading-[28px] font-bold text-gray-900 text-center">
+              Invitation not found
+            </Text>
+            <Text className="text-center text-[16px] leading-[24px] text-gray-600">
+              This invitation may have expired or been withdrawn.
+            </Text>
+            <Button onPress={() => router.back()} variant="primary">
+              Back to home
+            </Button>
+          </Card>
+        </View>
+      </SafeAreaView>
     );
+  }
+
+  const timeRemaining = getTimeRemaining(currentInvite);
+  const isExpired = timeRemaining <= 0;
+
+  if (isExpired) {
+    return (
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center px-component">
+          <Card className="w-full max-w-md items-center gap-component border-rose-200 bg-rose-50" testID={tid.provider.invite.expired}>
+            <View className="h-14 w-14 items-center justify-center rounded-full bg-rose-500">
+              <Ionicons name="time" size={24} color="white" />
+            </View>
+            <Text className="text-[22px] leading-[28px] font-bold text-rose-900 text-center">
+              Invitation expired
+            </Text>
+            <Text className="text-center text-[16px] leading-[24px] text-rose-800">
+              This offer expired before you accepted it. Check your home tab for new invites.
+            </Text>
+            <Button onPress={() => router.replace('/(provider)/home')} variant="primary">
+              Back to home
+            </Button>
+          </Card>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView className="flex-1 bg-white">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View className="px-component pt-section pb-section gap-section">
+          <View className="gap-component">
+            <Badge variant="info" className="self-start">
+              JOB INVITATION
+            </Badge>
+            <Card className="gap-component">
+              <View className="flex-row items-start justify-between gap-component">
+                <View className="flex-1 gap-tight">
+                  <Text className="text-[22px] leading-[28px] font-bold text-gray-900">
+                    {currentInvite.customerName}
+                  </Text>
+                  <View className="flex-row items-center gap-tight">
+                    <Ionicons name="star" size={16} color="#fbbf24" />
+                    <Text className="text-[16px] leading-[24px] text-gray-700">
+                      {currentInvite.rating.toFixed(1)} customer rating
+                    </Text>
+                  </View>
+                </View>
+                <Countdown
+                  initialSeconds={timeRemaining}
+                  className="self-start"
+                  testID={`countdown-${currentInvite.id}`}
+                />
+              </View>
+
+              <View className="flex-row gap-component">
+                <MetricTile label="Offered fare" value={`${currentInvite.price} MAD`} tone="success" />
+                <MetricTile label="ETA" value={`${currentInvite.etaMinutes} min`} tone="primary" />
+              </View>
+            </Card>
+          </View>
+
+          <Card className="gap-component">
+            <Text className="text-[18px] leading-[24px] font-semibold text-gray-900">
+              Service location
+            </Text>
+            <Text className="text-[16px] leading-[24px] text-gray-700">
+              {currentInvite.approxAddress}
+            </Text>
+            <NoticeBanner
+              tone="info"
+              title="Exact address shared after acceptance"
+              body="We hide the full address until you accept. Once accepted, we will guide you directly to the customer."
+            />
+          </Card>
+
+          <Card className="gap-component">
+            <Text className="text-[18px] leading-[24px] font-semibold text-gray-900">
+              Before you accept
+            </Text>
+            <View className="gap-component">
+              <View className="flex-row items-start gap-component">
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="time-outline" size={16} color="#2563eb" />
+                </View>
+                <Text className="flex-1 text-[16px] leading-[24px] text-gray-700">
+                  Start right away so the customer stays on schedule.
+                </Text>
+              </View>
+              <View className="flex-row items-start gap-component">
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="cash-outline" size={16} color="#2563eb" />
+                </View>
+                <Text className="flex-1 text-[16px] leading-[24px] text-gray-700">
+                  Payment is cash on completion—remember to collect it before finishing.
+                </Text>
+              </View>
+              <View className="flex-row items-start gap-component">
+                <View className="h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+                  <Ionicons name="shield-checkmark" size={16} color="#2563eb" />
+                </View>
+                <Text className="flex-1 text-[16px] leading-[24px] text-gray-700">
+                  Only one active job at a time. Decline if you cannot commit.
+                </Text>
+              </View>
+            </View>
+          </Card>
+
+          {activeJob && (
+            <NoticeBanner
+              tone="warn"
+              title="Finish your current job first"
+              body="You already have a job in progress. Complete it before accepting new invitations."
+            />
+          )}
+        </View>
+      </ScrollView>
+
+      <StickyFooter>
+        <View className="flex-row gap-component">
+          <View className="flex-1">
+            <Button
+              onPress={handleDecline}
+              variant="subtle"
+              disabled={loading}
+              testID={tid.provider.invite.decline}
+            >
+              Decline
+            </Button>
+          </View>
+          <View className="flex-1">
+            <Button
+              onPress={handleAccept}
+              variant="primary"
+              disabled={loading || !!activeJob}
+              testID={tid.provider.invite.accept}
+            >
+              {loading ? 'Accepting…' : 'Accept job'}
+            </Button>
+          </View>
+        </View>
+      </StickyFooter>
+    </SafeAreaView>
+  );
 }

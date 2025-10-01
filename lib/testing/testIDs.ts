@@ -4,13 +4,13 @@ export const tid = {
     toggle: 'prov.home.toggle',
 
     // Invite cards
-    inviteCard: (id: string) => `prov.invite.card-${id}`,
-    viewInvite: (id: string) => `prov.invite.view-${id}`,
-
-    // Invite detail screen
-    accept: 'prov.invite.accept',
-    decline: 'prov.invite.decline',
-    expired: 'prov.invite.expired',
+    invite: {
+      card: (id: string) => `prov.invite.card-${id}`,
+      view: (id: string) => `prov.invite.view-${id}`,
+      accept: 'prov.invite.accept',
+      decline: 'prov.invite.decline',
+      expired: 'prov.invite.expired',
+    },
 
     // Job screen
     job: {
@@ -28,8 +28,25 @@ export const tid = {
     // Onboarding
     onboarding: {
       name: 'prov.onb.name',
+      nameError: 'prov.onb.name.error',
       phone: 'prov.onb.phone',
+      phoneError: 'prov.onb.phone.error',
       submit: 'prov.onb.submit',
+    },
+
+    // Profile
+    profile: {
+      name: 'prov.profile.name',
+      phone: 'prov.profile.phone',
+      toggle: 'prov.profile.toggle',
+      signout: 'prov.profile.signout',
+    },
+
+    // Tabs
+    tabs: {
+      home: 'prov.tabs.home',
+      earnings: 'prov.tabs.earnings',
+      profile: 'prov.tabs.profile',
     },
   },
 

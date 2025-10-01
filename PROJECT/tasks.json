@@ -1,0 +1,315 @@
+{
+  "lastSync": "2025-10-01T11:52:13Z",
+  "head": {
+    "branch": "main",
+    "sha": "87cf2b9"
+  },
+  "tasks": [
+    {
+      "id": "t-001",
+      "title": "Wire provider home screen to store + navigation",
+      "status": "planned",
+      "priority": "P0",
+      "area": "provider",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home",
+        "/(provider)/invite/[id]",
+        "/(provider)/job/[id]"
+      ],
+      "files": [
+        "app/(provider)/home.tsx",
+        "lib/provider/store.ts"
+      ],
+      "testIDs": [
+        "prov.home.toggle",
+        "prov.invite.card-<id>",
+        "prov.invite.view-<id>"
+      ],
+      "acceptance": [
+        "`/(provider)/home` uses `useProviderState` to hydrate profile, invites, and active job so toggling `prov.home.toggle` calls `toggleOnline`.",
+        "Invite tap routes push to `/(provider)/invite/<id>` and active job tap replaces to `/(provider)/job/<activeId>` without throwing.",
+        "Null store values render empty states while countdowns continue via utils/time.getTimeRemaining."
+      ],
+      "evidence": null,
+      "notes": "High-priority fix; screen currently throws when Switch fires."
+    },
+    {
+      "id": "t-002",
+      "title": "Persist provider profile + availability to storage",
+      "status": "planned",
+      "priority": "P1",
+      "area": "core",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home",
+        "/(provider)/profile",
+        "/"
+      ],
+      "files": [
+        "lib/provider/mock.ts",
+        "lib/provider/store.ts",
+        "app/index.tsx"
+      ],
+      "testIDs": [
+        "prov.profile.name",
+        "prov.profile.toggle",
+        "loading-screen"
+      ],
+      "acceptance": [
+        "`useProviderProfile` hydrates from AsyncStorage and persists after toggling `prov.profile.toggle`.",
+        "App entry checks storied state so `loading-screen` redirects to `/(provider)/home` when a cached provider exists.",
+        "Saved profile fields repopulate `prov.profile.name` and `prov.profile.phone` after reloads."
+      ],
+      "evidence": null,
+      "notes": "Depends on AsyncStorage availability; include migration guard for empty cache."
+    },
+    {
+      "id": "t-003",
+      "title": "Add provider store tests for invites + completion guards",
+      "status": "planned",
+      "priority": "P1",
+      "area": "testing",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/invite/[id]",
+        "/(provider)/job/[id]"
+      ],
+      "files": [
+        "lib/provider/mock.ts",
+        "lib/provider/store.ts",
+        "__tests__/providerStore.spec.ts"
+      ],
+      "testIDs": [
+        "prov.invite.accept",
+        "prov.job.complete",
+        "prov.complete.finish"
+      ],
+      "acceptance": [
+        "Unit tests cover acceptInvite returning null when activeJob already set and decline removing invites.",
+        "TTL countdown spec asserts `getRemainingTTL` and invite subscriptions mirror `countdown-<id>` UX.",
+        "Completing a job pushes earnings and clears active job, matching CTA flow expectations."
+      ],
+      "evidence": null,
+      "notes": "Model tests after existing AppButton suite using jest-expo preset."
+    },
+    {
+      "id": "t-004",
+      "title": "Design QA + instrumentation for provider earnings CTA",
+      "status": "planned",
+      "priority": "P2",
+      "area": "ui",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/earnings"
+      ],
+      "files": [
+        "app/(provider)/earnings.tsx",
+        "components/ui/MetricTile.tsx"
+      ],
+      "testIDs": [
+        "prov.earnings.continue"
+      ],
+      "acceptance": [
+        "Primary CTA exposes prov.earnings.continue and respects >=44dp touch target.",
+        "Spacing tokens (component/section) documented and applied on earnings cards/metrics.",
+        "Empty state copy and color contrast audited with tokens recorded in TASKS.md notes."
+      ],
+      "evidence": null,
+      "notes": "Coordinate with design tokens to avoid drifting from tailwind spacing scale."
+    },
+    {
+      "id": "t-005",
+      "title": "Analytics skeleton for provider flows",
+      "status": "planned",
+      "priority": "P3",
+      "area": "core",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home",
+        "/(provider)/invite/[id]",
+        "/(provider)/job/[id]",
+        "/(provider)/complete/[id]"
+      ],
+      "files": [
+        "utils/analytics.ts",
+        "app/(provider)/home.tsx",
+        "app/(provider)/invite/[id].tsx",
+        "app/(provider)/job/[id].tsx",
+        "app/(provider)/complete/[id].tsx"
+      ],
+      "testIDs": [
+        "prov.home.toggle",
+        "prov.invite.accept",
+        "prov.job.startWork",
+        "prov.complete.finish"
+      ],
+      "acceptance": [
+        "Introduce logInteraction helper with no-op transport stub and docs in DECISIONS.md.",
+        "Provider screens call logInteraction with route + elementId for primary actions.",
+        "Helper exports mocked implementation for Jest to keep tests deterministic."
+      ],
+      "evidence": null,
+      "notes": "Optional to wire to console.log for now; ensure future batching is possible."
+    },
+    {
+      "id": "t-006",
+      "title": "Provider tab shell (Home/Earnings/Profile)",
+      "status": "done",
+      "priority": "P1",
+      "area": "provider",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home",
+        "/(provider)/earnings",
+        "/(provider)/profile"
+      ],
+      "files": [
+        "app/(provider)/_layout.tsx",
+        "components/nav/FlatTabBar.tsx"
+      ],
+      "testIDs": [
+        "prov.tabs.home",
+        "prov.tabs.earnings",
+        "prov.tabs.profile"
+      ],
+      "acceptance": [
+        "FlatTabBar renders provider tabs with safe-area padding and active styling.",
+        "Hidden stack routes stay out of the tab strip while tabs persist across navigation."
+      ],
+      "evidence": {
+        "commits": [
+          "b08f6b8"
+        ],
+        "screens": []
+      },
+      "notes": "Tabs fallback logic also handles public flows for now."
+    },
+    {
+      "id": "t-007",
+      "title": "Invite TTL with countdown + expiry UX",
+      "status": "done",
+      "priority": "P1",
+      "area": "provider",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home",
+        "/(provider)/invite/[id]"
+      ],
+      "files": [
+        "components/ui/Countdown.tsx",
+        "app/(provider)/invite/[id].tsx",
+        "lib/provider/mock.ts"
+      ],
+      "testIDs": [
+        "countdown-<id>",
+        "prov.invite.expired",
+        "prov.invite.accept"
+      ],
+      "acceptance": [
+        "Countdown badge decrements per second and fires expiry handler.",
+        "Expired invites render dedicated state and remove from home list."
+      ],
+      "evidence": {
+        "commits": [
+          "b08f6b8"
+        ],
+        "screens": []
+      },
+      "notes": "Mock store prunes stale invites via tickInviteCountdowns."
+    },
+    {
+      "id": "t-008",
+      "title": "Single active job guard + exact address reveal",
+      "status": "done",
+      "priority": "P1",
+      "area": "provider",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/invite/[id]",
+        "/(provider)/job/[id]"
+      ],
+      "files": [
+        "lib/provider/mock.ts",
+        "app/(provider)/invite/[id].tsx",
+        "app/(provider)/job/[id].tsx"
+      ],
+      "testIDs": [
+        "prov.invite.accept",
+        "prov.job.startDrive"
+      ],
+      "acceptance": [
+        "acceptInvite returns null when activeJob exists and UI shows blocking banner.",
+        "Exact address only shown on job screen after acceptance."
+      ],
+      "evidence": {
+        "commits": [
+          "b08f6b8"
+        ],
+        "screens": []
+      },
+      "notes": "Invite banner warns about single job capacity."
+    },
+    {
+      "id": "t-009",
+      "title": "Cash confirmation gating on completion",
+      "status": "done",
+      "priority": "P1",
+      "area": "provider",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/complete/[id]",
+        "/(provider)/earnings"
+      ],
+      "files": [
+        "app/(provider)/complete/[id].tsx",
+        "lib/provider/mock.ts"
+      ],
+      "testIDs": [
+        "prov.complete.cash",
+        "prov.complete.finish"
+      ],
+      "acceptance": [
+        "Finish CTA disabled until cash toggle is true.",
+        "Complete job pushes earning and navigates to earnings summary."
+      ],
+      "evidence": {
+        "commits": [
+          "b08f6b8"
+        ],
+        "screens": []
+      },
+      "notes": "NoticeBanner reinforces cash-only policy."
+    },
+    {
+      "id": "t-010",
+      "title": "Provider onboarding form with keyboard avoidance",
+      "status": "done",
+      "priority": "P2",
+      "area": "provider",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/onboarding"
+      ],
+      "files": [
+        "app/(provider)/onboarding.tsx"
+      ],
+      "testIDs": [
+        "prov.onb.name",
+        "prov.onb.phone",
+        "prov.onb.submit"
+      ],
+      "acceptance": [
+        "KeyboardAvoidingView prevents input overlap on iOS/Android.",
+        "Inline validation updates name/phone errors with dedicated testIDs."
+      ],
+      "evidence": {
+        "commits": [
+          "b08f6b8"
+        ],
+        "screens": []
+      },
+      "notes": "Form autofocuses name field for faster onboarding."
+    }
+  ]
+}

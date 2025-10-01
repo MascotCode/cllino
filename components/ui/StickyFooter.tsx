@@ -12,7 +12,7 @@ export default function StickyFooter({ children, className = '' }: StickyFooterP
 
   return (
     <View 
-      className={`mt-auto bg-white border-t border-gray-200 shadow-sm px-4 pt-4 ${className}`}
+      className={`mt-auto border-t border-border-subtle bg-surface-0 px-5 pt-4 shadow-sheet ${className}`}
       style={{ paddingBottom: Math.max(insets.bottom, 16) }}
     >
       {children}

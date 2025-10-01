@@ -1,6 +1,7 @@
+import { SERVICE_PRICING } from '@/constants/pricing';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, useLocalSearchParams } from 'expo-router';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { AppButton as Button } from '../../components/ui/Button';
 import Card from '../../components/ui/Card';
@@ -11,9 +12,9 @@ import { fmtMoney } from '../../utils/format';
 // MOCK DATA
 const ORDER_SUMMARY = {
   service: {
+    id: 'deep',
     name: 'Deep Cleaning',
-    price: 35,
-    duration: 90
+    ...SERVICE_PRICING.deep
   },
   addons: [],
   address: 'Home - 123 Residence Street',
@@ -48,7 +49,11 @@ export default function PriceScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <View className="flex-1 px-4 py-6">
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingHorizontal: 16, paddingVertical: 24, paddingBottom: 120 }}
+        showsVerticalScrollIndicator={false}
+      >
         <Title>Review Order</Title>
 
         <View className="gap-4 mt-8">
@@ -62,7 +67,7 @@ export default function PriceScreen() {
                     <Text className="font-medium text-gray-900">{ORDER_SUMMARY.service.name}</Text>
                     <Text className="text-sm text-gray-500">{ORDER_SUMMARY.service.duration} minutes</Text>
                   </View>
-                  <Text className="font-medium text-gray-900">{fmtMoney(ORDER_SUMMARY.service.price, 'Mad')}</Text>
+                  <Text className="font-medium text-gray-900">{fmtMoney(ORDER_SUMMARY.service.price)}</Text>
                 </View>
               </View>
             </View>
@@ -114,13 +119,13 @@ export default function PriceScreen() {
             </View>
           </Card>
         </View>
-      </View>
+      </ScrollView>
 
       {/* Sticky Footer */}
       <StickyFooter>
         <View className="p-4 mb-4 bg-gray-50 rounded-xl">
           <View className="flex-row items-center justify-center gap-2">
-            <Text className="text-xl font-bold text-gray-900">Total: {fmtMoney(total, '$')}</Text>
+            <Text className="text-xl font-bold text-gray-900">Total: {fmtMoney(total)}</Text>
             <Text className="text-gray-500">•</Text>
             <Text className="text-gray-500">{ORDER_SUMMARY.service.duration} mins</Text>
           </View>

@@ -9,21 +9,21 @@ const NavigationSafeButton = React.forwardRef<
   React.ElementRef<typeof Pressable>,
   PressableProps & { variant?: Variant; size?: Size; className?: string }
 >(({ children, variant = 'primary', size = 'lg', className = '', ...rest }, ref) => {
-  const base = 'rounded-2xl items-center justify-center active:opacity-90';
-  const sizes = size === 'md' ? 'h-11 px-4' : 'h-14 px-5';
+  const base = 'rounded-2xl items-center justify-center active:opacity-80 transition-opacity duration-150';
+  const sizes = size === 'md' ? 'h-12 px-6' : 'h-14 px-6';
 
   const variants: Record<Variant, string> = {
-    primary: 'bg-blue-600 shadow-lg',
-    subtle: 'bg-gray-100 border border-gray-300',
+    primary: 'bg-primary shadow-press',
+    subtle: 'bg-surface-100 border border-border-strong',
     ghost: 'bg-transparent',
-    danger: 'bg-red-600'
+    danger: 'bg-red-600 shadow-press'
   };
 
   const textColors: Record<Variant, string> = {
-    primary: 'text-white',
-    subtle: 'text-gray-900',
-    ghost: 'text-gray-900',
-    danger: 'text-white'
+    primary: 'text-text-inverse',
+    subtle: 'text-text-primary',
+    ghost: 'text-text-primary',
+    danger: 'text-text-inverse'
   };
 
   // Wrap onPress to prevent navigation context errors

@@ -10,6 +10,7 @@ import {
   getTotalEarnings,
   saveProfile,
   subscribeActiveJob,
+  subscribeEarnings,
   subscribeInvites,
   toggleOnline,
   updateJobStatus,
@@ -118,15 +119,22 @@ export function useEarnings() {
   const [earnings, setEarnings] = useState<TEarnings[]>(getEarnings);
   const [total, setTotal] = useState<number>(getTotalEarnings);
 
-  const refresh = useCallback(() => {
-    setEarnings(getEarnings());
-    setTotal(getTotalEarnings());
+  const updateFromEntries = useCallback((entries: TEarnings[]) => {
+    const paidTotal = entries
+      .filter((entry) => entry.cashReceived)
+      .reduce((sum, entry) => sum + entry.price, 0);
+    setEarnings(entries);
+    setTotal(paidTotal);
   }, []);
 
-  // Auto-refresh when component mounts
+  const refresh = useCallback(() => {
+    updateFromEntries(getEarnings());
+  }, [updateFromEntries]);
+
   useEffect(() => {
-    refresh();
-  }, [refresh]);
+    const unsubscribe = subscribeEarnings(updateFromEntries);
+    return unsubscribe;
+  }, [updateFromEntries]);
 
   return {
     earnings,

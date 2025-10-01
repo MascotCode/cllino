@@ -1,10 +1,17 @@
 // Pricing system with floor, soft cap, and fat-finger guard
 // Follows the specification: hard min, soft cap "Typical up to...", absolute cap confirm
 
-export type CarSize = 'compact' | 'suv' | 'van';
+import {
+  CAR_SIZE_SURCHARGES,
+  SERVICE_PRICING,
+  type CarSize,
+  type ServiceId,
+} from '@/constants/pricing';
+
+export type { CarSize, ServiceId } from '@/constants/pricing';
 
 export interface PricingInputs {
-  serviceId: string;
+  serviceId: ServiceId;
   carSize: CarSize;
   vehicleCount: number; // ≥1
   distanceKm?: number; // optional for future; safe default 0
@@ -25,29 +32,15 @@ export const roundTo5 = (n: number): number => {
   return Math.round(n / 5) * 5;
 };
 
-// Car size adjustment mapping
-const SIZE_ADJUSTMENTS: Record<CarSize, number> = {
-  compact: 0,
-  suv: 7,
-  van: 12,
-};
-
-// Service base prices - this should match the SERVICES array in index.tsx
-const SERVICE_BASE_PRICES: Record<string, number> = {
-  basic: 15,
-  deep: 35,
-  interior: 25,
-  premium: 55,
-};
-
 export const computePricing = (inputs: PricingInputs): PricingBreakdown => {
   const { serviceId, carSize, vehicleCount, distanceKm = 0 } = inputs;
   
   // Get base price for service
-  const baseFloorPerCar = SERVICE_BASE_PRICES[serviceId] || 15; // fallback to basic
+  const serviceConfig = SERVICE_PRICING[serviceId] ?? SERVICE_PRICING.basic;
+  const baseFloorPerCar = serviceConfig.price;
   
   // Get size adjustment
-  const sizeAdjPerCar = SIZE_ADJUSTMENTS[carSize] || 0;
+  const sizeAdjPerCar = CAR_SIZE_SURCHARGES[carSize] ?? 0;
   
   // Distance adjustment (placeholder for future)
   const distanceAdjPerCar = 0; // placeholder

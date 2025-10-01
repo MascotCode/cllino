@@ -16,6 +16,8 @@ let countdownInterval: ReturnType<typeof setInterval> | null = null;
 // Active job subscription system
 type ActiveJobCallback = (job: TActiveJob | null) => void;
 let activeJobCallbacks: ActiveJobCallback[] = [];
+type EarningsCallback = (earnings: TEarnings[]) => void;
+let earningsCallbacks: EarningsCallback[] = [];
 
 const mockCustomers = [
   {
@@ -182,6 +184,11 @@ function notifyActiveJobCallbacks(): void {
   activeJobCallbacks.forEach((callback) => callback(activeJob));
 }
 
+function notifyEarningsCallbacks(): void {
+  const snapshot = getEarnings();
+  earningsCallbacks.forEach((callback) => callback(snapshot));
+}
+
 // Active job subscription
 export function subscribeActiveJob(callback: ActiveJobCallback): () => void {
   activeJobCallbacks.push(callback);
@@ -189,6 +196,15 @@ export function subscribeActiveJob(callback: ActiveJobCallback): () => void {
   // Return unsubscribe function
   return () => {
     activeJobCallbacks = activeJobCallbacks.filter((cb) => cb !== callback);
+  };
+}
+
+export function subscribeEarnings(callback: EarningsCallback): () => void {
+  earningsCallbacks.push(callback);
+  callback(getEarnings());
+
+  return () => {
+    earningsCallbacks = earningsCallbacks.filter((cb) => cb !== callback);
   };
 }
 
@@ -282,6 +298,7 @@ export function completeJob(
   };
 
   earnings.push(earning);
+  notifyEarningsCallbacks();
 
   // Clear active job
   activeJob = null;
