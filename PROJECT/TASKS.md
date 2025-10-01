@@ -1,6 +1,6 @@
 # Project Tracker
 
-_Last sync: 2025-10-01T11:52:13Z • Branch: main • Head: 87cf2b9_
+_Last sync: 2025-10-01T16:37:14Z • Branch: main • Head: 5bee973_
 
 ## Now / Next / Later (Kanban)
 
@@ -11,6 +11,13 @@ _Last sync: 2025-10-01T11:52:13Z • Branch: main • Head: 87cf2b9_
     - `/(provider)/home` consumes `useProviderState` to hydrate profile, invites, and active job; toggling `tid.provider.toggle` updates `toggleOnline` in `lib/provider/store.ts`.
     - Tapping `prov.invite.card-<id>` or `prov.invite.view-<id>` navigates through `router.push('/(provider)/invite/<id>')`; `handleActiveJob` routes to `/(provider)/job/<activeId>`.
     - Empty state guards render without crashes when store values are null while continuing to call `utils/time.getTimeRemaining` for countdowns.
+
+- [ ] Cash notice primitive + adoption (ID: t-011) — Owner: TBA • Area: ui • Status: in-progress
+  - Why: Cash-only messaging is duplicated and inconsistent across provider screens.
+  - Acceptance:
+    - `components/ui/CashNotice.tsx` centralizes the copy + icon with 16px padding, 8–12px gaps, and exposes the `cash-notice.learn` affordance.
+    - `/(provider)/home` and `/(provider)/earnings` render the primitive; completion keeps its NoticeBanner.
+    - Provider CTAs stay ≥44dp and surface testIDs `prov.home.cashNotice`, `prov.earnings.cashNotice`, and `prov.earnings.continue`.
 
 ### NEXT
 - [ ] Persist provider profile + availability to storage (ID: t-002) — Owner: TBA • Area: core • Status: planned
@@ -26,6 +33,41 @@ _Last sync: 2025-10-01T11:52:13Z • Branch: main • Head: 87cf2b9_
     - TTL expiry flow asserts `getRemainingTTL` drops expired invites and mirrors `countdown-<id>` behaviour.
     - Completing a job via `prov.job.complete` + `prov.complete.finish` pushes earnings and resets `useActiveJob` state.
 
+- [ ] Supabase project bootstrap (ID: t-020) — Owner: TBA • Area: backend • Status: planned
+  - Acceptance:
+    - Supabase project created; anon/service keys stored in `.env` and `.env.example` with comments
+    - SDK installed and client factory added at `lib/supabase/client.ts`
+    - Minimal health check screen flag (dev-only) reports connected project (no secrets logged)
+  - Files: `lib/supabase/client.ts`, `.env.example`, `app/_dev/health.tsx`
+
+- [ ] Auth (Supabase) — email OTP + session (ID: t-021) — Owner: TBA • Area: auth • Status: planned
+  - Acceptance:
+    - Sign in/up UI behind feature flag; testIDs: `auth.email.input`, `auth.signin.button`, `auth.signout.button`
+    - Session persisted; app restores session on cold start; fallback to provider onboarding when signed-in and profile incomplete
+    - Renders current user email on Profile screen (`prov.profile.email`)
+  - Files: `lib/supabase/client.ts`, `app/(auth)/*`, `app/(provider)/profile.tsx`
+
+- [ ] Schema: providers, jobs, earnings (ID: t-022) — Owner: TBA • Area: db • Status: planned
+  - Acceptance:
+    - SQL migration checked in under `supabase/migrations/*` creating tables: `providers`, `jobs`, `earnings`
+    - Columns cover cash-only MVP (price, status, timestamps); DB constraints align with single active job
+    - Seed script for demo data; README snippet on applying migrations locally
+  - Files: `supabase/migrations/*`, `supabase/seed.sql`, `README.md`
+
+- [ ] RLS policies (cash-only + privacy) (ID: t-023) — Owner: TBA • Area: security • Status: planned
+  - Acceptance:
+    - RLS enabled on `jobs`, `earnings`; policies restrict rows to provider’s user_id
+    - Approx address readable pre-accept; exact address only after accept (policy or view)
+    - Policy unit tests via `supabase-tests` SQL or notes in README on manual verification
+  - Files: `supabase/policies/*.sql`, `README.md#rls`
+
+- [ ] Realtime invites stream (ID: t-024) — Owner: TBA • Area: backend • Status: planned
+  - Acceptance:
+    - Client subscribes to `invites` channel; TTL handled client-side for now
+    - Fallback to mock when env missing; feature flag toggles between mock ↔ live
+    - TestIDs unchanged on UI (e.g., `countdown-<id>`)
+  - Files: `lib/provider/store.ts`, `lib/supabase/realtime.ts`
+
 ### LATER
 - [ ] Design QA + instrumentation for provider earnings CTA (ID: t-004) — Owner: TBA • Area: ui • Status: planned
   - Why: Earnings screen lacks CTA testIDs and spacing guidance, making QA + automation brittle.
@@ -39,6 +81,31 @@ _Last sync: 2025-10-01T11:52:13Z • Branch: main • Head: 87cf2b9_
     - Introduce `utils/analytics.ts` (or similar) exporting `logInteraction({ elementId, route })` and stub transport.
     - Home, Invite, Job, Complete screens call `logInteraction` on `prov.home.toggle`, `prov.invite.accept`, `prov.job.startWork`, `prov.complete.finish` actions.
     - Analytics hook is safe to no-op in tests and documented in `PROJECT/DECISIONS.md`.
+    - 2025-10-01 / 5bee973: logInteraction wired for `prov.home.toggle` and `prov.complete.finish`.
+
+- [ ] Cash completion write-back (ID: t-025) — Owner: TBA • Area: backend • Status: planned
+  - Acceptance:
+    - Toggling `prov.complete.cash` + `prov.complete.finish` persists job completion + inserts earning
+    - Failure states surface non-blocking toast; retry allowed
+  - Files: `app/(provider)/complete/[id].tsx`, `lib/supabase/jobs.ts`
+
+- [ ] Edge function: idle auto-assign log (ID: t-026) — Owner: TBA • Area: backend • Status: planned
+  - Acceptance:
+    - Edge function endpoint records “idle ≥60s with pending invite” events
+    - Client calls endpoint on condition; no auto-assign action yet (MVP log only)
+  - Files: `supabase/functions/idle-log/*`, `lib/telemetry/idle.ts`
+
+- [ ] Analytics transport swap (ID: t-027) — Owner: TBA • Area: analytics • Status: planned
+  - Acceptance:
+    - `utils/analytics.ts` can batch+flush to Supabase table or Edge function
+    - Dev mode remains console; tests mock transport
+  - Files: `utils/analytics.ts`, `lib/supabase/analytics.ts`
+
+- [ ] CI env + secrets hygiene (ID: t-028) — Owner: TBA • Area: release • Status: planned
+  - Acceptance:
+    - `.env.example` documented; Git ignored secrets audited
+    - EAS/CI variables documented; redaction policy in PR template
+  - Files: `.env.example`, `.github/PULL_REQUEST_TEMPLATE.md`, `README.md#env`
 
 ---
 
@@ -75,11 +142,11 @@ _Last sync: 2025-10-01T11:52:13Z • Branch: main • Head: 87cf2b9_
 ---
 
 ## Test Map (by screen → testIDs)
-- `/(provider)/home`: `prov.home.toggle`, `prov.invite.card-<id>`, `prov.invite.view-<id>`, `countdown-<id>`
+- `/(provider)/home`: `prov.home.toggle`, `prov.invite.card-<id>`, `prov.invite.view-<id>`, `countdown-<id>`, `prov.home.cashNotice`
 - `/(provider)/invite/[id]`: `prov.invite.accept`, `prov.invite.decline`, `prov.invite.expired`, `countdown-<id>`
 - `/(provider)/job/[id]`: `prov.job.startDrive`, `prov.job.startWork`, `prov.job.complete`
 - `/(provider)/complete/[id]`: `prov.complete.cash`, `prov.complete.finish`, `customer-rating-<n>`
-- `/(provider)/earnings`: _No testIDs yet — add `prov.earnings.continue` in t-004_
+- `/(provider)/earnings`: `prov.earnings.cashNotice`, `prov.earnings.continue`
 - `/(provider)/profile`: `prov.profile.name`, `prov.profile.phone`, `prov.profile.toggle`, `prov.profile.signout`
 - `/(provider)/onboarding`: `prov.onb.name`, `prov.onb.phone`, `prov.onb.submit`
 

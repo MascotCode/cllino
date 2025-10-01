@@ -42,6 +42,18 @@ export const tid = {
       signout: 'prov.profile.signout',
     },
 
+    // Earnings
+    earnings: {
+      continue: 'prov.earnings.continue',
+    },
+
+    // Cash notice
+    cashNotice: {
+      home: 'prov.home.cashNotice',
+      earnings: 'prov.earnings.cashNotice',
+      learn: 'cash-notice.learn',
+    },
+
     // Tabs
     tabs: {
       home: 'prov.tabs.home',

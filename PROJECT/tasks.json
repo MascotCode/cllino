@@ -1,8 +1,8 @@
 {
-  "lastSync": "2025-10-01T11:52:13Z",
+  "lastSync": "2025-10-01T16:37:14Z",
   "head": {
     "branch": "main",
-    "sha": "87cf2b9"
+    "sha": "5bee973"
   },
   "tasks": [
     {
@@ -147,7 +147,8 @@
       "acceptance": [
         "Introduce logInteraction helper with no-op transport stub and docs in DECISIONS.md.",
         "Provider screens call logInteraction with route + elementId for primary actions.",
-        "Helper exports mocked implementation for Jest to keep tests deterministic."
+        "Helper exports mocked implementation for Jest to keep tests deterministic.",
+        "2025-10-01 / 5bee973: logInteraction wired for prov.home.toggle and prov.complete.finish."
       ],
       "evidence": null,
       "notes": "Optional to wire to console.log for now; ensure future batching is possible."
@@ -310,6 +311,254 @@
         "screens": []
       },
       "notes": "Form autofocuses name field for faster onboarding."
+    },
+    {
+      "id": "t-011",
+      "title": "Cash notice primitive + adoption",
+      "status": "in-progress",
+      "priority": "P1",
+      "area": "ui",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home",
+        "/(provider)/earnings"
+      ],
+      "files": [
+        "components/ui/CashNotice.tsx",
+        "app/(provider)/home.tsx",
+        "app/(provider)/earnings.tsx"
+      ],
+      "testIDs": [
+        "prov.home.cashNotice",
+        "prov.earnings.cashNotice",
+        "cash-notice.learn",
+        "prov.earnings.continue"
+      ],
+      "acceptance": [
+        "Cash reminder extracted to reusable primitive with consistent spacing and copy.",
+        "Home and Earnings consume the primitive; Complete retains NoticeBanner.",
+        "CTA touch targets stay \u226544dp; learn-more exposes cash-notice.learn testID."
+      ],
+      "evidence": {
+        "commits": [
+          "5bee973"
+        ]
+      },
+      "notes": "Unifies cash-only UX and testIDs; follows spacing tokens."
+    },
+    {
+      "id": "t-020",
+      "title": "Supabase project bootstrap",
+      "status": "planned",
+      "priority": "P1",
+      "area": "backend",
+      "owner": "TBA",
+      "routes": [
+        "/_dev/health"
+      ],
+      "files": [
+        "lib/supabase/client.ts",
+        ".env.example",
+        "app/_dev/health.tsx"
+      ],
+      "testIDs": [],
+      "acceptance": [
+        "Supabase client factory exists and reads keys from env",
+        "Health screen confirms connectivity in dev",
+        "Secrets not committed; example env updated"
+      ],
+      "evidence": null,
+      "notes": "Feature-flag any live calls; default to mock when env missing"
+    },
+    {
+      "id": "t-021",
+      "title": "Auth (Supabase) \u2014 email OTP + session",
+      "status": "planned",
+      "priority": "P1",
+      "area": "auth",
+      "owner": "TBA",
+      "routes": [
+        "/(auth)/signin",
+        "/(provider)/profile"
+      ],
+      "files": [
+        "lib/supabase/client.ts",
+        "app/(auth)/*",
+        "app/(provider)/profile.tsx"
+      ],
+      "testIDs": [
+        "auth.email.input",
+        "auth.signin.button",
+        "auth.signout.button",
+        "prov.profile.email"
+      ],
+      "acceptance": [
+        "Sign in/up via email OTP; session restored on cold start",
+        "Profile screen shows current email",
+        "Falls back to onboarding if profile incomplete"
+      ],
+      "evidence": null,
+      "notes": "Keep public routes for demo; guard provider routes when signed-out"
+    },
+    {
+      "id": "t-022",
+      "title": "Schema: providers, jobs, earnings",
+      "status": "planned",
+      "priority": "P1",
+      "area": "db",
+      "owner": "TBA",
+      "routes": [],
+      "files": [
+        "supabase/migrations/*",
+        "supabase/seed.sql",
+        "README.md"
+      ],
+      "testIDs": [],
+      "acceptance": [
+        "Migrations create providers/jobs/earnings tables",
+        "Single active job constraint modeled",
+        "Seed script populates demo data"
+      ],
+      "evidence": null,
+      "notes": "Align columns to current mocks (price, status, timestamps)"
+    },
+    {
+      "id": "t-023",
+      "title": "RLS policies (cash-only + privacy)",
+      "status": "planned",
+      "priority": "P0",
+      "area": "security",
+      "owner": "TBA",
+      "routes": [],
+      "files": [
+        "supabase/policies/*.sql",
+        "README.md"
+      ],
+      "testIDs": [],
+      "acceptance": [
+        "RLS enabled on jobs/earnings",
+        "Approx address pre-accept; exact address post-accept only",
+        "Manual/SQL tests documented"
+      ],
+      "evidence": null,
+      "notes": "Security-critical before any live demo with real data"
+    },
+    {
+      "id": "t-024",
+      "title": "Realtime invites stream",
+      "status": "planned",
+      "priority": "P2",
+      "area": "backend",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home",
+        "/(provider)/invite/[id]"
+      ],
+      "files": [
+        "lib/provider/store.ts",
+        "lib/supabase/realtime.ts"
+      ],
+      "testIDs": [
+        "countdown-<id>",
+        "prov.invite.accept"
+      ],
+      "acceptance": [
+        "Subscribe to invites channel; TTL handled on client",
+        "Feature flag toggles mock/live",
+        "No change to existing testIDs"
+      ],
+      "evidence": null,
+      "notes": "Keep countdown cadence at 1s; avoid jitter"
+    },
+    {
+      "id": "t-025",
+      "title": "Cash completion write-back",
+      "status": "planned",
+      "priority": "P1",
+      "area": "backend",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/complete/[id]",
+        "/(provider)/earnings"
+      ],
+      "files": [
+        "lib/supabase/jobs.ts",
+        "app/(provider)/complete/[id].tsx"
+      ],
+      "testIDs": [
+        "prov.complete.cash",
+        "prov.complete.finish"
+      ],
+      "acceptance": [
+        "Finish persists job completion + earning row",
+        "Graceful error toast; retry supported"
+      ],
+      "evidence": null,
+      "notes": "Respect single active job rule"
+    },
+    {
+      "id": "t-026",
+      "title": "Edge function: idle auto-assign log",
+      "status": "planned",
+      "priority": "P3",
+      "area": "backend",
+      "owner": "TBA",
+      "routes": [
+        "/(provider)/home"
+      ],
+      "files": [
+        "supabase/functions/idle-log/*",
+        "lib/telemetry/idle.ts"
+      ],
+      "testIDs": [],
+      "acceptance": [
+        "Edge function receives log when idle \u226560s with pending invite",
+        "No behavioral auto-assign (log only)"
+      ],
+      "evidence": null,
+      "notes": "Aligns with guardrail; behavior deferred"
+    },
+    {
+      "id": "t-027",
+      "title": "Analytics transport swap",
+      "status": "planned",
+      "priority": "P3",
+      "area": "analytics",
+      "owner": "TBA",
+      "routes": [],
+      "files": [
+        "utils/analytics.ts",
+        "lib/supabase/analytics.ts"
+      ],
+      "testIDs": [],
+      "acceptance": [
+        "Transport can batch + flush to Supabase",
+        "Console remains in dev; tests mock transport"
+      ],
+      "evidence": null,
+      "notes": "No vendor lock-in"
+    },
+    {
+      "id": "t-028",
+      "title": "CI env + secrets hygiene",
+      "status": "planned",
+      "priority": "P2",
+      "area": "release",
+      "owner": "TBA",
+      "routes": [],
+      "files": [
+        ".env.example",
+        ".github/PULL_REQUEST_TEMPLATE.md",
+        "README.md"
+      ],
+      "testIDs": [],
+      "acceptance": [
+        "Example env covers all keys with comments",
+        "PR template includes redaction/secrets checklist",
+        "EAS/CI variables documented"
+      ],
+      "evidence": null,
+      "notes": "Prevents secrets mishaps before backend rollout"
     }
   ]
 }

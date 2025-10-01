@@ -1,14 +1,15 @@
 import Badge from '@/components/ui/Badge';
 import { AppButton as Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import CashNotice from '@/components/ui/CashNotice';
 import MetricTile from '@/components/ui/MetricTile';
-import NoticeBanner from '@/components/ui/NoticeBanner';
 import StarRating from '@/components/ui/StarRating';
-import StickyFooter from '@/components/ui/StickyFooter';
+import StickyFooter, { stickyFooterContentPadding } from '@/components/ui/StickyFooter';
+import { tid } from '@/lib/testing/testIDs';
 import { useEarnings } from '@/lib/provider/store';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const formatCurrency = (value: number) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
@@ -37,11 +38,18 @@ export default function Earnings() {
         router.replace('/(provider)/home');
     };
 
+    const handleLearnMore = () => {
+        Alert.alert(
+            'Cash-only reminder',
+            'Record every cash payout as soon as you receive it to keep your totals accurate.'
+        );
+    };
+
     return (
         <SafeAreaView className="flex-1 bg-white">
             <ScrollView
                 className="flex-1"
-                contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}
+                contentContainerStyle={{ paddingBottom: stickyFooterContentPadding(insets.bottom) }}
                 showsVerticalScrollIndicator={false}
             >
                 <View className="px-component pt-section pb-section gap-section">
@@ -61,6 +69,8 @@ export default function Earnings() {
                         <MetricTile label="Total jobs" value={earnings.length} tone="neutral" />
                         <MetricTile label="Paid jobs" value={paidJobCount} tone="success" />
                     </View>
+
+                    <CashNotice testID={tid.provider.cashNotice.earnings} onLearnMore={handleLearnMore} />
 
                     {hasEarnings ? (
                         <View className="gap-component">
@@ -146,18 +156,17 @@ export default function Earnings() {
                             </Button>
                         </Card>
                     )}
-
-                    <NoticeBanner
-                        tone="warn"
-                        title="Cash payments only"
-                        body="Record each payout as soon as you get it so your totals stay accurate."
-                    />
                 </View>
             </ScrollView>
 
             {hasEarnings && (
                 <StickyFooter>
-                    <Button onPress={handleBackToHome} variant="primary">
+                    <Button
+                        onPress={handleBackToHome}
+                        variant="primary"
+                        testID={tid.provider.earnings.continue}
+                        accessibilityLabel="Continue working"
+                    >
                         Continue working
                     </Button>
                 </StickyFooter>

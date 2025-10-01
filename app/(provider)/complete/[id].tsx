@@ -5,6 +5,7 @@ import StarRating from '@/components/ui/StarRating';
 import StickyFooter from '@/components/ui/StickyFooter';
 import { useProviderState } from '@/lib/provider/store';
 import { tid } from '@/lib/testing/testIDs';
+import { logInteraction } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
@@ -28,6 +29,12 @@ export default function CompleteJob() {
   };
 
   const handleFinishJob = async () => {
+    logInteraction({
+      elementId: tid.provider.complete.finish,
+      route: '/(provider)/complete/[id]',
+      meta: { enabled: cashReceived }
+    });
+
     if (!activeJob || !cashReceived) {
       Alert.alert('Cash payment required', 'Confirm that you received cash before finishing the job.', [{ text: 'OK' }]);
       return;
@@ -180,6 +187,7 @@ export default function CompleteJob() {
           disabled={!cashReceived || loading}
           testID={tid.provider.complete.finish}
           variant="primary"
+          accessibilityLabel="Finish job"
         >
           {loading ? 'Finishing…' : 'Finish job'}
         </Button>

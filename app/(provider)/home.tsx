@@ -1,14 +1,16 @@
 import { AppButton as Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import CashNotice from '@/components/ui/CashNotice';
 import Countdown from '@/components/ui/Countdown';
 import NoticeBanner from '@/components/ui/NoticeBanner';
 import StarRating from '@/components/ui/StarRating';
 import StatusPill from '@/components/ui/StatusPill';
 import StepperDots from '@/components/ui/StepperDots';
 import { getTimeRemaining } from '@/utils/time';
+import { logInteraction } from '@/utils/analytics';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import React from 'react';
-import { FlatList, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, FlatList, Pressable, ScrollView, Switch, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { TActiveJob, TInvite } from '@/lib/provider/types';
@@ -60,6 +62,25 @@ const Home: React.FC<HomeProps> = ({
   const firstName = profile?.name?.split(' ')[0] ?? 'Provider';
   const jobStatus = activeJob?.status ?? 'assigned';
   const statusTone = jobStatus === 'working' ? 'success' : 'neutral';
+
+  const onToggleOnline = React.useCallback(
+    (value: boolean) => {
+      logInteraction({
+        elementId: tid.provider.toggle,
+        route: '/(provider)/home',
+        meta: { value },
+      });
+      handleToggleOnline(value);
+    },
+    [handleToggleOnline]
+  );
+
+  const handleCashNoticeLearnMore = React.useCallback(() => {
+    Alert.alert(
+      'Cash-only reminder',
+      'All provider jobs are cash on completion. Confirm that you received payment before finishing.'
+    );
+  }, []);
 
   const renderInviteItem = ({ item }: { item: TInvite }) => {
     const timeRemaining = getTimeRemaining(item);
@@ -140,6 +161,8 @@ const Home: React.FC<HomeProps> = ({
             </Text>
           </View>
 
+          <CashNotice testID={tid.provider.cashNotice.home} onLearnMore={handleCashNoticeLearnMore} />
+
           <Card className="gap-component">
             <View className="flex-row items-center justify-between gap-component">
               <View className="flex-1 gap-minimal">
@@ -165,7 +188,7 @@ const Home: React.FC<HomeProps> = ({
                 accessibilityLabel="Toggle online status"
                 accessibilityHint="Switch on to start receiving job requests"
                 value={isOnline}
-                onValueChange={handleToggleOnline}
+                onValueChange={onToggleOnline}
                 testID={tid.provider.toggle}
                 thumbColor={isOnline ? '#0f766e' : '#f4f4f5'}
                 trackColor={{ false: '#d4d4d8', true: '#99f6e4' }}
@@ -246,7 +269,7 @@ const Home: React.FC<HomeProps> = ({
                     Flip your status online to get new cash job pings in your area.
                   </Text>
                 </View>
-                <Button onPress={() => handleToggleOnline(true)} variant="primary" size="md" className="px-6 min-h-11">
+                <Button onPress={() => onToggleOnline(true)} variant="primary" size="md" className="px-6 min-h-11">
                   Go online
                 </Button>
               </Card>
@@ -282,21 +305,6 @@ const Home: React.FC<HomeProps> = ({
             )}
           </View>
 
-          <Card className="p-5 border-amber-200 bg-amber-50 mt-section">
-            <View className="flex-row items-start space-x-3">
-              <View className="w-6 h-6 bg-amber-500 rounded-full items-center justify-center mt-0.5">
-                <Ionicons name="cash" size={14} color="white" />
-              </View>
-              <View className="flex-1">
-                <Text className="mb-1 font-medium text-amber-900">
-                  Cash Payment Required
-                </Text>
-                <Text className="text-sm text-amber-800">
-                  All jobs are paid in cash on completion. You can handle one active job at a time.
-                </Text>
-              </View>
-            </View>
-          </Card>
         </View>
       </ScrollView>
     </SafeAreaView>
