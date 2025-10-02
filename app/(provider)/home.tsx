@@ -1,17 +1,18 @@
+import InviteCard from '@/components/provider/InviteCard';
 import { AppButton as Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import CashNotice from '@/components/ui/CashNotice';
-import Countdown from '@/components/ui/Countdown';
-import NoticeBanner from '@/components/ui/NoticeBanner';
-import StarRating from '@/components/ui/StarRating';
 import StatusPill from '@/components/ui/StatusPill';
 import StepperDots from '@/components/ui/StepperDots';
-import { getTimeRemaining } from '@/utils/time';
+import { toggleOnline as toggleOnlineMock } from '@/lib/provider/mock';
+import { useProviderState } from '@/lib/provider/store';
 import { logInteraction } from '@/utils/analytics';
+import { getTimeRemaining } from '@/utils/time';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { useRouter } from 'expo-router';
 import React from 'react';
 import { Alert, FlatList, Pressable, ScrollView, Switch, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TActiveJob, TInvite } from '@/lib/provider/types';
 import { tid } from '@/lib/testing/testIDs';
@@ -40,25 +41,30 @@ const statusSteps: Record<TActiveJob['status'], 0 | 1 | 2 | 3> = {
 type HomeProps = {
   profile: any;
   activeJob: TActiveJob | null;
-  invites: TInvite[];
-  insets: { bottom: number };
-  handleToggleOnline: (value?: boolean) => void;
+  invites?: TInvite[];
+  handleToggleOnline?: (value?: boolean) => void;
   handleActiveJob: () => void;
-  handleInvite: (invite: TInvite) => void;
   handleViewInvite: (invite: TInvite) => void;
 };
 
 const Home: React.FC<HomeProps> = ({
   profile,
   activeJob,
-  invites,
-  insets,
+  invites = [],
   handleToggleOnline,
   handleActiveJob,
-  handleInvite,
   handleViewInvite,
 }) => {
-  const isOnline = profile?.isOnline ?? false;
+  const insets = useSafeAreaInsets();
+  const [localOnline, setLocalOnline] = React.useState<boolean>(profile?.isOnline ?? false);
+
+  React.useEffect(() => {
+    if (typeof profile?.isOnline === 'boolean') {
+      setLocalOnline(profile.isOnline);
+    }
+  }, [profile?.isOnline]);
+
+  const isOnline = handleToggleOnline ? profile?.isOnline ?? false : localOnline;
   const firstName = profile?.name?.split(' ')[0] ?? 'Provider';
   const jobStatus = activeJob?.status ?? 'assigned';
   const statusTone = jobStatus === 'working' ? 'success' : 'neutral';
@@ -70,7 +76,12 @@ const Home: React.FC<HomeProps> = ({
         route: '/(provider)/home',
         meta: { value },
       });
-      handleToggleOnline(value);
+      if (handleToggleOnline) {
+        handleToggleOnline(value);
+      } else {
+        toggleOnlineMock(value);
+        setLocalOnline(value);
+      }
     },
     [handleToggleOnline]
   );
@@ -82,63 +93,6 @@ const Home: React.FC<HomeProps> = ({
     );
   }, []);
 
-  const renderInviteItem = ({ item }: { item: TInvite }) => {
-    const timeRemaining = getTimeRemaining(item);
-
-    return (
-      <Pressable
-        onPress={() => handleInvite(item)}
-        className="active:shadow-press active:scale-[0.99]"
-        accessibilityRole="button"
-        accessibilityLabel={`View invite for ${item.customerName}`}
-        accessibilityHint="Opens the full job invitation details"
-      >
-        <Card testID={tid.provider.invite.card(item.id)} className="flex-row justify-between flex-1 gap-component gap-tight">
-          <View className="flex-1 gap-tight">
-            <Text className="text-[18px] leading-[24px] font-semibold text-gray-900" numberOfLines={1} ellipsizeMode="tail">
-              {item.customerName}
-            </Text>
-            <Text className="text-[16px] leading-[24px] text-gray-600" numberOfLines={1} ellipsizeMode="tail">
-              {item.approxAddress}
-            </Text>
-            <View className="flex-row items-center gap-tight">
-              <StarRating rating={item.rating} size={16} readonly />
-              <Text className="text-[16px] leading-[24px] font-medium text-gray-700">
-                {item.rating.toFixed(1)}
-              </Text>
-            </View>
-          </View>
-          <View className="items-end gap-minimal">
-            <Text className="text-[28px] leading-[34px] font-extrabold text-green-600">
-              {item.price} MAD
-            </Text>
-            <Text className="text-[12px] leading-[16px] font-semibold uppercase text-green-700">
-              Cash payment
-            </Text>
-            <Countdown
-              initialSeconds={timeRemaining}
-              testID={`countdown-${item.id}`}
-              className="min-w-[56px]"
-            />
-            <StatusPill label={`${item.etaMinutes} min ETA`} tone="neutral" />
-          </View>
-          <Button
-            onPress={(event) => {
-              event?.stopPropagation?.();
-              handleViewInvite(item);
-            }}
-            variant="primary"
-            size="md"
-            className="w-full mt-2 min-h-11"
-            testID={tid.provider.invite.view(item.id)}
-          >
-            View job details
-          </Button>
-        </Card>
-      </Pressable>
-    );
-  };
-
   const hasInvites = invites.length > 0;
   const shouldShowInvites = isOnline && hasInvites;
 
@@ -148,20 +102,20 @@ const Home: React.FC<HomeProps> = ({
         className="flex-1"
         contentContainerStyle={{ paddingBottom: insets.bottom + 120 }}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}
       >
+        <View className="bg-white gap-tight px-component pt-section pb-section">
+          <Text className="text-[28px] leading-[34px] font-extrabold text-gray-900">
+            Good {getTimeOfDay()}, {firstName}
+          </Text>
+          <Text className="text-[16px] leading-[24px] text-gray-700">
+            {isOnline
+              ? 'You are visible to nearby cash jobs.'
+              : 'Switch online to start receiving new requests.'}
+          </Text>
+        </View>
         <View className="px-component pt-section pb-section gap-section">
-          <View className="gap-tight">
-            <Text className="text-[28px] leading-[34px] font-extrabold text-gray-900">
-              Good {getTimeOfDay()}, {firstName}
-            </Text>
-            <Text className="text-[16px] leading-[24px] text-gray-700">
-              {isOnline
-                ? 'You are visible to nearby cash jobs.'
-                : 'Switch online to start receiving new requests.'}
-            </Text>
-          </View>
 
-          <CashNotice testID={tid.provider.cashNotice.home} onLearnMore={handleCashNoticeLearnMore} />
 
           <Card className="gap-component">
             <View className="flex-row items-center justify-between gap-component">
@@ -276,16 +230,17 @@ const Home: React.FC<HomeProps> = ({
             ) : shouldShowInvites ? (
               <View className="gap-component">
                 <FlatList
-                  data={invites}
+                  data={invites.slice(0, 3)}
                   keyExtractor={(item) => item.id}
-                  renderItem={renderInviteItem}
+                  renderItem={({ item }) => (
+                    <InviteCard
+                      invite={item}
+                      timeRemaining={getTimeRemaining(item)}
+                      onPress={handleViewInvite}
+                    />
+                  )}
                   ItemSeparatorComponent={() => <View className="h-element" />}
                   scrollEnabled={false}
-                />
-                <NoticeBanner
-                  tone="warn"
-                  title="Cash payments only"
-                  body="Customers will hand you cash at the end of each job. Please confirm payment before closing the job."
                 />
               </View>
             ) : (
@@ -305,10 +260,53 @@ const Home: React.FC<HomeProps> = ({
             )}
           </View>
 
+          <CashNotice testID={tid.provider.cashNotice.home} onLearnMore={handleCashNoticeLearnMore} />
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 };
 
-export default Home;
+const ProviderHomeScreen: React.FC = () => {
+  const router = useRouter();
+  const {
+    profile,
+    setOnlineStatus,
+    invites,
+    activeJob,
+  } = useProviderState();
+
+  const handleToggleOnline = React.useCallback(
+    (value?: boolean) => {
+      setOnlineStatus(Boolean(value));
+    },
+    [setOnlineStatus]
+  );
+
+  const handleActiveJob = React.useCallback(() => {
+    if (activeJob) {
+      router.push(`/(provider)/job/${activeJob.id}`);
+    }
+  }, [activeJob, router]);
+
+  const handleInvite = React.useCallback(
+    (invite: TInvite) => {
+      router.push(`/(provider)/invite/${invite.id}`);
+    },
+    [router]
+  );
+
+  return (
+    <Home
+      profile={profile}
+      activeJob={activeJob}
+      invites={invites}
+      handleToggleOnline={handleToggleOnline}
+      handleActiveJob={handleActiveJob}
+      handleViewInvite={handleInvite}
+    />
+  );
+};
+
+export default ProviderHomeScreen;
+export { Home };

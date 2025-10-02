@@ -10,6 +10,8 @@ export const tid = {
       accept: 'prov.invite.accept',
       decline: 'prov.invite.decline',
       expired: 'prov.invite.expired',
+      price: (id: string) => `prov.invite.price-${id}`,
+      eta: (id: string) => `prov.invite.eta-${id}`,
     },
 
     // Job screen
@@ -17,6 +19,12 @@ export const tid = {
       startDrive: 'prov.job.startDrive',
       startWork: 'prov.job.startWork',
       complete: 'prov.job.complete',
+      steps: {
+        assigned: 'prov.job.step-assigned',
+        onTheWay: 'prov.job.step-onTheWay',
+        working: 'prov.job.step-working',
+        completed: 'prov.job.step-completed',
+      },
     },
 
     // Complete screen

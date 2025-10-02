@@ -1,10 +1,10 @@
+import Ionicons from '@expo/vector-icons/Ionicons';
 import { useCallback } from 'react';
 import { Alert, Text, View } from 'react-native';
-import Ionicons from '@expo/vector-icons/Ionicons';
 
+import { tid } from '@/lib/testing/testIDs';
 import { AppButton as Button } from './Button';
 import Card from './Card';
-import { tid } from '@/lib/testing/testIDs';
 
 type CashNoticeProps = {
   testID?: string;
@@ -26,13 +26,14 @@ export default function CashNotice({ testID = 'cash-notice', onLearnMore }: Cash
 
   return (
     <Card
-      className="gap-component"
+      className="gap-component !bg-amber-100"
       testID={testID}
       accessibilityRole="summary"
       accessibilityLabel="Cash-only reminder"
+
     >
       <View className="flex-row items-start gap-component">
-        <View className="h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-amber-100" accessible={false}>
+        <View className="items-center justify-center w-10 h-10 border rounded-full border-amber-200 bg-amber-200" accessible={false}>
           <Ionicons name="cash-outline" size={20} color="#B45309" />
         </View>
         <View className="flex-1 gap-tight">
@@ -48,7 +49,7 @@ export default function CashNotice({ testID = 'cash-notice', onLearnMore }: Cash
       <Button
         variant="subtle"
         size="md"
-        className="w-full"
+        className="w-full bg-amber-200"
         onPress={handleLearnMore}
         testID={tid.provider.cashNotice.learn}
         accessibilityLabel="Learn more about cash-only requirements"

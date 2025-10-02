@@ -9,10 +9,10 @@ interface StarRatingProps {
   testIDPrefix?: string;
 }
 
-export default function StarRating({ 
-  rating, 
-  onRatingChange, 
-  size = 32, 
+export default function StarRating({
+  rating,
+  onRatingChange,
+  size = 32,
   readonly = false,
   testIDPrefix = 'star'
 }: StarRatingProps) {
@@ -23,12 +23,12 @@ export default function StarRating({
   };
 
   return (
-    <View className="flex-row gap-1">
+    <View className="flex-row">
       {[1, 2, 3, 4, 5].map((star) => (
         <Pressable
           key={star}
           onPress={() => handleStarPress(star)}
-          className={`min-w-[36px] items-center justify-center ${readonly ? 'py-1' : 'py-2'}`}
+          className={`items-center justify-center ${readonly ? 'py-1' : 'py-2'}`}
           disabled={readonly}
           testID={`${testIDPrefix}-${star}`}
         >

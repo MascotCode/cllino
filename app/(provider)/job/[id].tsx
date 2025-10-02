@@ -1,5 +1,6 @@
-import Card from '@/components/ui/Card';
+import JobTimeline, { TimelineStep } from '@/components/provider/JobTimeline';
 import { AppButton as Button } from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import KeyValueRow from '@/components/ui/KeyValueRow';
 import StatusPill from '@/components/ui/StatusPill';
 import StepperDots from '@/components/ui/StepperDots';
@@ -45,8 +46,6 @@ const statusSteps: Record<TActiveJob['status'], 0 | 1 | 2 | 3> = {
   complete: 3
 };
 
-const statusOrder: TActiveJob['status'][] = ['assigned', 'enroute', 'working', 'complete'];
-
 const statusTone: Record<TActiveJob['status'], 'success' | 'neutral' | 'warn'> = {
   assigned: 'neutral',
   enroute: 'warn',
@@ -85,6 +84,39 @@ export default function ActiveJob() {
 
   const jobReference = useMemo(() => (activeJob ? activeJob.id.split('_').pop() ?? activeJob.id : ''), [activeJob]);
 
+  const timelineSteps = useMemo((): TimelineStep[] => {
+    const order: Array<{ key: TimelineStep['key']; status: TActiveJob['status']; description: string }> = [
+      { key: 'assigned', status: 'assigned', description: 'Head to the customer right away to stay on schedule.' },
+      { key: 'onTheWay', status: 'enroute', description: 'Let the customer know you are on the way.' },
+      { key: 'working', status: 'working', description: 'Perform the job as agreed and keep the customer in the loop.' },
+      { key: 'completed', status: 'complete', description: 'Wrap up the visit and confirm the cash payout.' },
+    ];
+
+    const activeIndex = order.findIndex((item) => item.status === statusKey);
+
+    return order.map((item, index) => {
+      let state: TimelineStep['state'] = 'pending';
+
+      if (activeIndex === -1) {
+        state = index === 0 ? 'current' : 'pending';
+      } else if (statusKey === 'complete') {
+        state = index <= activeIndex ? 'completed' : 'pending';
+      } else if (index < activeIndex) {
+        state = 'completed';
+      } else if (index === activeIndex) {
+        state = 'current';
+      }
+
+      return {
+        key: item.key,
+        title: statusLabels[item.status],
+        description: item.description,
+        state,
+      };
+    });
+  }, [statusKey]);
+
+
   const handleStatusUpdate = async (newStatus: TActiveJob['status']) => {
     if (!activeJob || loading) return;
 
@@ -115,9 +147,9 @@ export default function ActiveJob() {
   if (!activeJob || activeJob.id !== id) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 items-center justify-center px-component">
-          <Card className="w-full max-w-md items-center gap-component">
-            <View className="h-16 w-16 items-center justify-center rounded-full bg-rose-100">
+        <View className="items-center justify-center flex-1 px-component">
+          <Card className="items-center w-full max-w-md gap-component">
+            <View className="items-center justify-center w-16 h-16 rounded-full bg-rose-100">
               <Ionicons name="close-circle" size={30} color="#e11d48" />
             </View>
             <Text className="text-[22px] leading-[28px] font-bold text-gray-900 text-center">
@@ -141,12 +173,13 @@ export default function ActiveJob() {
         className="flex-1"
         contentContainerStyle={{ paddingBottom: insets.bottom + 140 }}
         showsVerticalScrollIndicator={false}
+        stickyHeaderIndices={[0]}
       >
+        <View className="flex-row items-center justify-between bg-white py-section px-component pt-section">
+          <Text className="text-[22px] leading-[28px] ml-4 font-bold text-gray-900">Active job</Text>
+          <StatusPill label={statusLabels[statusKey]} tone={statusTone[statusKey]} />
+        </View>
         <View className="px-component pt-section pb-section gap-section">
-          <View className="flex-row items-center justify-between">
-            <Text className="text-[22px] leading-[28px] font-bold text-gray-900">Active job</Text>
-            <StatusPill label={statusLabels[statusKey]} tone={statusTone[statusKey]} />
-          </View>
 
           <Card className="gap-component">
             <View className="gap-minimal">
@@ -157,7 +190,7 @@ export default function ActiveJob() {
                 Job #{jobReference}
               </Text>
             </View>
-            <View className="rounded-2xl border border-blue-200 bg-blue-50 px-component py-component gap-tight">
+            <View className="border border-blue-200 rounded-2xl bg-blue-50 px-component py-component gap-tight">
               <Text className="text-[28px] leading-[34px] font-extrabold text-blue-700">
                 {activeJob.price} MAD
               </Text>
@@ -194,47 +227,7 @@ export default function ActiveJob() {
           </Card>
 
           <Card className="gap-component">
-            <View className="gap-component">
-              {statusOrder.map((status, index) => {
-                const statusIndex = statusSteps[statusKey];
-                const isActive = status === statusKey;
-                const isComplete = index < statusIndex;
-                const isUpcoming = index > statusIndex;
-                const tone = isActive ? 'primary' : isComplete ? 'success' : 'neutral';
-
-                return (
-                  <View
-                    key={status}
-                    className="flex-row items-center gap-component"
-                  >
-                    <View
-                      className={`h-12 w-12 items-center justify-center rounded-full border ${isActive ? 'border-blue-500 bg-blue-50' : isComplete ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-gray-50'}`}
-                    >
-                      {isComplete ? (
-                        <Ionicons name="checkmark" size={18} color={isActive ? '#2563EB' : '#16a34a'} />
-                      ) : (
-                        <Text className={`text-[16px] font-semibold ${isActive ? 'text-blue-600' : 'text-gray-500'}`}>{index + 1}</Text>
-                      )}
-                    </View>
-                    <View className="flex-1 gap-tight">
-                      <Text className={`text-[16px] leading-[24px] font-semibold ${isActive ? 'text-blue-700' : 'text-gray-900'}`}>
-                        {statusLabels[status]}
-                      </Text>
-                      {isActive && (
-                        <Text className="text-[14px] leading-[20px] text-blue-600">{nextHint}</Text>
-                      )}
-                      {isComplete && !isActive && (
-                        <Text className="text-[14px] leading-[20px] text-green-600">Completed</Text>
-                      )}
-                      {isUpcoming && (
-                        <Text className="text-[14px] leading-[20px] text-gray-500">Pending</Text>
-                      )}
-                    </View>
-                    <StatusPill label={statusLabels[status]} tone={tone as any} />
-                  </View>
-                );
-              })}
-            </View>
+            <JobTimeline steps={timelineSteps} />
           </Card>
 
           <Card className="gap-component">
@@ -243,12 +236,11 @@ export default function ActiveJob() {
             </Text>
             <KeyValueRow
               icon={(
-                <View className="h-9 w-9 items-center justify-center rounded-full bg-blue-100">
+                <View className="items-center justify-center bg-blue-100 rounded-full h-9 w-9">
                   <Ionicons name="information" size={16} color="#2563eb" />
                 </View>
               )}
               left={nextHint}
-              right={nextCta}
             />
           </Card>
         </View>
