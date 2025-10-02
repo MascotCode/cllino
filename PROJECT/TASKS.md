@@ -1,6 +1,6 @@
 # Project Tracker
 
-_Last sync: 2025-10-01T16:37:14Z • Branch: main • Head: 5bee973_
+_Last sync: 2025-10-01T17:43:52Z • Branch: main • Head: 5bee973_
 
 ## Now / Next / Later (Kanban)
 
@@ -18,6 +18,28 @@ _Last sync: 2025-10-01T16:37:14Z • Branch: main • Head: 5bee973_
     - `components/ui/CashNotice.tsx` centralizes the copy + icon with 16px padding, 8–12px gaps, and exposes the `cash-notice.learn` affordance.
     - `/(provider)/home` and `/(provider)/earnings` render the primitive; completion keeps its NoticeBanner.
     - Provider CTAs stay ≥44dp and surface testIDs `prov.home.cashNotice`, `prov.earnings.cashNotice`, and `prov.earnings.continue`.
+
+- [ ] InviteCard UX V2 (chips cluster + stars under name) (ID: t-015)
+  — Owner: @anouar.alh • Area: provider • Status: in-progress
+  - ETA pill placed next to countdown in a right-aligned cluster
+  - Stars row tightened and moved under client name
+  - CTA remains full-width at bottom
+  - Files: components/provider/InviteCard.tsx
+  - Acceptance:
+    - Chips render side-by-side; do not wrap at typical widths
+    - Stars have compact spacing with numeric rating
+    - All info (name, price, countdown, ETA, rating, address) visible without scrolling
+
+- [ ] Active Job timeline refactor (ID: t-017) - Owner: @anouar.alh - Area: provider - Status: in-progress
+  - Replace step list with vertical timeline component (`components/provider/JobTimeline.tsx`)
+  - Keep a single header status chip; remove duplicate status chips inside the list
+  - New per-step testIDs: `prov.job.step-assigned`, `prov.job.step-onTheWay`, `prov.job.step-working`, `prov.job.step-completed`
+  - Files: `app/(provider)/job/[id].tsx`, `components/provider/JobTimeline.tsx`
+  - Acceptance:
+    - Timeline shows 4 steps with correct state styling (completed/current/pending)
+    - No duplicate status chips on the page; header chip only
+    - Footer CTA unaffected; safe-area respected
+
 
 ### NEXT
 - [ ] Persist provider profile + availability to storage (ID: t-002) — Owner: TBA • Area: core • Status: planned
@@ -142,7 +164,7 @@ _Last sync: 2025-10-01T16:37:14Z • Branch: main • Head: 5bee973_
 ---
 
 ## Test Map (by screen → testIDs)
-- `/(provider)/home`: `prov.home.toggle`, `prov.invite.card-<id>`, `prov.invite.view-<id>`, `countdown-<id>`, `prov.home.cashNotice`
+- `/(provider)/home`: `prov.home.toggle`, `prov.invite.card-<id>`, `prov.invite.view-<id>`, `prov.invite.price-<id>`, `prov.invite.eta-<id>`, `countdown-<id>`, `prov.home.cashNotice`
 - `/(provider)/invite/[id]`: `prov.invite.accept`, `prov.invite.decline`, `prov.invite.expired`, `countdown-<id>`
 - `/(provider)/job/[id]`: `prov.job.startDrive`, `prov.job.startWork`, `prov.job.complete`
 - `/(provider)/complete/[id]`: `prov.complete.cash`, `prov.complete.finish`, `customer-rating-<n>`
@@ -167,3 +189,4 @@ _Last sync: 2025-10-01T16:37:14Z • Branch: main • Head: 5bee973_
 2. Keep `PROJECT/TASKS.md` and `PROJECT/tasks.json` in sync (IDs, status, fields).
 3. If acceptance criteria change, add a bullet under the task with date + SHA.
 4. Reference **testIDs** and **routes** in acceptance criteria.
+

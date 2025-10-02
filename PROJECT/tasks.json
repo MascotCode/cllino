@@ -1,5 +1,5 @@
 {
-  "lastSync": "2025-10-01T16:37:14Z",
+  "lastSync": "2025-10-01T17:43:52Z",
   "head": {
     "branch": "main",
     "sha": "5bee973"
@@ -559,6 +559,69 @@
       ],
       "evidence": null,
       "notes": "Prevents secrets mishaps before backend rollout"
+    },
+    {
+      "id": "t-017",
+      "title": "Active Job timeline refactor",
+      "status": "in-progress",
+      "priority": "P1",
+      "area": "provider",
+      "owner": "@anouar.alh",
+      "routes": [
+        "/(provider)/job/[id]"
+      ],
+      "files": [
+        "app/(provider)/job/[id].tsx",
+        "components/provider/JobTimeline.tsx"
+      ],
+      "testIDs": [
+        "prov.job.step-assigned",
+        "prov.job.step-onTheWay",
+        "prov.job.step-working",
+        "prov.job.step-completed",
+        "prov.job.startDrive"
+      ],
+      "acceptance": [
+        "Header shows single status chip",
+        "Timeline renders 4 steps; states derived from current step",
+        "No repeated status chips within list items",
+        "StickyFooter CTA preserved and visible"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Visual tidy + reduced redundancy"
+    },
+    {
+      "id": "t-015",
+      "title": "InviteCard UX v2 (CTA bottom, hierarchy, tight stars)",
+      "status": "in-progress",
+      "priority": "P1",
+      "area": "provider",
+      "routes": [
+        "/(provider)/home"
+      ],
+      "files": [
+        "components/provider/InviteCard.tsx"
+      ],
+      "testIDs": [
+        "prov.invite.card-<id>",
+        "prov.invite.view-<id>",
+        "countdown-<id>",
+        "prov.invite.price-<id>",
+        "prov.invite.eta-<id>"
+      ],
+      "acceptance": [
+        "CTA at bottom; no truncation; >=44dp",
+        "Chips cluster shows countdown + ETA side-by-side",
+        "Stars row sits under name with compact spacing and numeric rating",
+        "All info visible: name, price (MAD), countdown, ETA, rating, approx address"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Invite card layout refresh emphasizing CTA hierarchy and tight rating row",
+      "owner": "@anouar.alh"
     }
   ]
 }
