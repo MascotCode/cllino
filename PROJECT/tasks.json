@@ -17,10 +17,7 @@
         "/(provider)/invite/[id]",
         "/(provider)/job/[id]"
       ],
-      "files": [
-        "app/(provider)/home.tsx",
-        "lib/provider/store.ts"
-      ],
+      "files": ["app/(provider)/home.tsx", "lib/provider/store.ts"],
       "testIDs": [
         "prov.home.toggle",
         "prov.invite.card-<id>",
@@ -41,21 +38,13 @@
       "priority": "P1",
       "area": "core",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/home",
-        "/(provider)/profile",
-        "/"
-      ],
+      "routes": ["/(provider)/home", "/(provider)/profile", "/"],
       "files": [
         "lib/provider/mock.ts",
         "lib/provider/store.ts",
         "app/index.tsx"
       ],
-      "testIDs": [
-        "prov.profile.name",
-        "prov.profile.toggle",
-        "loading-screen"
-      ],
+      "testIDs": ["prov.profile.name", "prov.profile.toggle", "loading-screen"],
       "acceptance": [
         "`useProviderProfile` hydrates from AsyncStorage and persists after toggling `prov.profile.toggle`.",
         "App entry checks storied state so `loading-screen` redirects to `/(provider)/home` when a cached provider exists.",
@@ -71,10 +60,7 @@
       "priority": "P1",
       "area": "testing",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/invite/[id]",
-        "/(provider)/job/[id]"
-      ],
+      "routes": ["/(provider)/invite/[id]", "/(provider)/job/[id]"],
       "files": [
         "lib/provider/mock.ts",
         "lib/provider/store.ts",
@@ -100,16 +86,9 @@
       "priority": "P2",
       "area": "ui",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/earnings"
-      ],
-      "files": [
-        "app/(provider)/earnings.tsx",
-        "components/ui/MetricTile.tsx"
-      ],
-      "testIDs": [
-        "prov.earnings.continue"
-      ],
+      "routes": ["/(provider)/earnings"],
+      "files": ["app/(provider)/earnings.tsx", "components/ui/MetricTile.tsx"],
+      "testIDs": ["prov.earnings.continue"],
       "acceptance": [
         "Primary CTA exposes prov.earnings.continue and respects >=44dp touch target.",
         "Spacing tokens (component/section) documented and applied on earnings cards/metrics.",
@@ -165,23 +144,14 @@
         "/(provider)/earnings",
         "/(provider)/profile"
       ],
-      "files": [
-        "app/(provider)/_layout.tsx",
-        "components/nav/FlatTabBar.tsx"
-      ],
-      "testIDs": [
-        "prov.tabs.home",
-        "prov.tabs.earnings",
-        "prov.tabs.profile"
-      ],
+      "files": ["app/(provider)/_layout.tsx", "components/nav/FlatTabBar.tsx"],
+      "testIDs": ["prov.tabs.home", "prov.tabs.earnings", "prov.tabs.profile"],
       "acceptance": [
         "FlatTabBar renders provider tabs with safe-area padding and active styling.",
         "Hidden stack routes stay out of the tab strip while tabs persist across navigation."
       ],
       "evidence": {
-        "commits": [
-          "b08f6b8"
-        ],
+        "commits": ["b08f6b8"],
         "screens": []
       },
       "notes": "Tabs fallback logic also handles public flows for now."
@@ -193,10 +163,7 @@
       "priority": "P1",
       "area": "provider",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/home",
-        "/(provider)/invite/[id]"
-      ],
+      "routes": ["/(provider)/home", "/(provider)/invite/[id]"],
       "files": [
         "components/ui/Countdown.tsx",
         "app/(provider)/invite/[id].tsx",
@@ -212,9 +179,7 @@
         "Expired invites render dedicated state and remove from home list."
       ],
       "evidence": {
-        "commits": [
-          "b08f6b8"
-        ],
+        "commits": ["b08f6b8"],
         "screens": []
       },
       "notes": "Mock store prunes stale invites via tickInviteCountdowns."
@@ -226,27 +191,19 @@
       "priority": "P1",
       "area": "provider",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/invite/[id]",
-        "/(provider)/job/[id]"
-      ],
+      "routes": ["/(provider)/invite/[id]", "/(provider)/job/[id]"],
       "files": [
         "lib/provider/mock.ts",
         "app/(provider)/invite/[id].tsx",
         "app/(provider)/job/[id].tsx"
       ],
-      "testIDs": [
-        "prov.invite.accept",
-        "prov.job.startDrive"
-      ],
+      "testIDs": ["prov.invite.accept", "prov.job.startDrive"],
       "acceptance": [
         "acceptInvite returns null when activeJob exists and UI shows blocking banner.",
         "Exact address only shown on job screen after acceptance."
       ],
       "evidence": {
-        "commits": [
-          "b08f6b8"
-        ],
+        "commits": ["b08f6b8"],
         "screens": []
       },
       "notes": "Invite banner warns about single job capacity."
@@ -258,26 +215,15 @@
       "priority": "P1",
       "area": "provider",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/complete/[id]",
-        "/(provider)/earnings"
-      ],
-      "files": [
-        "app/(provider)/complete/[id].tsx",
-        "lib/provider/mock.ts"
-      ],
-      "testIDs": [
-        "prov.complete.cash",
-        "prov.complete.finish"
-      ],
+      "routes": ["/(provider)/complete/[id]", "/(provider)/earnings"],
+      "files": ["app/(provider)/complete/[id].tsx", "lib/provider/mock.ts"],
+      "testIDs": ["prov.complete.cash", "prov.complete.finish"],
       "acceptance": [
         "Finish CTA disabled until cash toggle is true.",
         "Complete job pushes earning and navigates to earnings summary."
       ],
       "evidence": {
-        "commits": [
-          "b08f6b8"
-        ],
+        "commits": ["b08f6b8"],
         "screens": []
       },
       "notes": "NoticeBanner reinforces cash-only policy."
@@ -289,25 +235,15 @@
       "priority": "P2",
       "area": "provider",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/onboarding"
-      ],
-      "files": [
-        "app/(provider)/onboarding.tsx"
-      ],
-      "testIDs": [
-        "prov.onb.name",
-        "prov.onb.phone",
-        "prov.onb.submit"
-      ],
+      "routes": ["/(provider)/onboarding"],
+      "files": ["app/(provider)/onboarding.tsx"],
+      "testIDs": ["prov.onb.name", "prov.onb.phone", "prov.onb.submit"],
       "acceptance": [
         "KeyboardAvoidingView prevents input overlap on iOS/Android.",
         "Inline validation updates name/phone errors with dedicated testIDs."
       ],
       "evidence": {
-        "commits": [
-          "b08f6b8"
-        ],
+        "commits": ["b08f6b8"],
         "screens": []
       },
       "notes": "Form autofocuses name field for faster onboarding."
@@ -319,10 +255,7 @@
       "priority": "P1",
       "area": "ui",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/home",
-        "/(provider)/earnings"
-      ],
+      "routes": ["/(provider)/home", "/(provider)/earnings"],
       "files": [
         "components/ui/CashNotice.tsx",
         "app/(provider)/home.tsx",
@@ -337,12 +270,10 @@
       "acceptance": [
         "Cash reminder extracted to reusable primitive with consistent spacing and copy.",
         "Home and Earnings consume the primitive; Complete retains NoticeBanner.",
-        "CTA touch targets stay ≥44dp; learn-more exposes cash-notice.learn testID."
+        "CTA touch targets stay \u226544dp; learn-more exposes cash-notice.learn testID."
       ],
       "evidence": {
-        "commits": [
-          "5bee973"
-        ]
+        "commits": ["5bee973"]
       },
       "notes": "Unifies cash-only UX and testIDs; follows spacing tokens."
     },
@@ -353,9 +284,7 @@
       "priority": "P1",
       "area": "backend",
       "owner": "TBA",
-      "routes": [
-        "/_dev/health"
-      ],
+      "routes": ["/_dev/health"],
       "files": [
         "lib/supabase/client.ts",
         ".env.example",
@@ -372,15 +301,12 @@
     },
     {
       "id": "t-021",
-      "title": "Auth (Supabase) — email OTP + session",
+      "title": "Auth (Supabase) \u2014 email OTP + session",
       "status": "planned",
       "priority": "P1",
       "area": "auth",
       "owner": "TBA",
-      "routes": [
-        "/(auth)/signin",
-        "/(provider)/profile"
-      ],
+      "routes": ["/(auth)/signin", "/(provider)/profile"],
       "files": [
         "lib/supabase/client.ts",
         "app/(auth)/*",
@@ -408,11 +334,7 @@
       "area": "db",
       "owner": "TBA",
       "routes": [],
-      "files": [
-        "supabase/migrations/*",
-        "supabase/seed.sql",
-        "README.md"
-      ],
+      "files": ["supabase/migrations/*", "supabase/seed.sql", "README.md"],
       "testIDs": [],
       "acceptance": [
         "Migrations create providers/jobs/earnings tables",
@@ -430,10 +352,7 @@
       "area": "security",
       "owner": "TBA",
       "routes": [],
-      "files": [
-        "supabase/policies/*.sql",
-        "README.md"
-      ],
+      "files": ["supabase/policies/*.sql", "README.md"],
       "testIDs": [],
       "acceptance": [
         "RLS enabled on jobs/earnings",
@@ -450,18 +369,9 @@
       "priority": "P2",
       "area": "backend",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/home",
-        "/(provider)/invite/[id]"
-      ],
-      "files": [
-        "lib/provider/store.ts",
-        "lib/supabase/realtime.ts"
-      ],
-      "testIDs": [
-        "countdown-<id>",
-        "prov.invite.accept"
-      ],
+      "routes": ["/(provider)/home", "/(provider)/invite/[id]"],
+      "files": ["lib/provider/store.ts", "lib/supabase/realtime.ts"],
+      "testIDs": ["countdown-<id>", "prov.invite.accept"],
       "acceptance": [
         "Subscribe to invites channel; TTL handled on client",
         "Feature flag toggles mock/live",
@@ -477,18 +387,9 @@
       "priority": "P1",
       "area": "backend",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/complete/[id]",
-        "/(provider)/earnings"
-      ],
-      "files": [
-        "lib/supabase/jobs.ts",
-        "app/(provider)/complete/[id].tsx"
-      ],
-      "testIDs": [
-        "prov.complete.cash",
-        "prov.complete.finish"
-      ],
+      "routes": ["/(provider)/complete/[id]", "/(provider)/earnings"],
+      "files": ["lib/supabase/jobs.ts", "app/(provider)/complete/[id].tsx"],
+      "testIDs": ["prov.complete.cash", "prov.complete.finish"],
       "acceptance": [
         "Finish persists job completion + earning row",
         "Graceful error toast; retry supported"
@@ -503,16 +404,11 @@
       "priority": "P3",
       "area": "backend",
       "owner": "TBA",
-      "routes": [
-        "/(provider)/home"
-      ],
-      "files": [
-        "supabase/functions/idle-log/*",
-        "lib/telemetry/idle.ts"
-      ],
+      "routes": ["/(provider)/home"],
+      "files": ["supabase/functions/idle-log/*", "lib/telemetry/idle.ts"],
       "testIDs": [],
       "acceptance": [
-        "Edge function receives log when idle ≥60s with pending invite",
+        "Edge function receives log when idle \u226560s with pending invite",
         "No behavioral auto-assign (log only)"
       ],
       "evidence": null,
@@ -526,10 +422,7 @@
       "area": "analytics",
       "owner": "TBA",
       "routes": [],
-      "files": [
-        "utils/analytics.ts",
-        "lib/supabase/analytics.ts"
-      ],
+      "files": ["utils/analytics.ts", "lib/supabase/analytics.ts"],
       "testIDs": [],
       "acceptance": [
         "Transport can batch + flush to Supabase",
@@ -567,9 +460,7 @@
       "priority": "P1",
       "area": "provider",
       "owner": "@anouar.alh",
-      "routes": [
-        "/(provider)/job/[id]"
-      ],
+      "routes": ["/(provider)/job/[id]"],
       "files": [
         "app/(provider)/job/[id].tsx",
         "components/provider/JobTimeline.tsx"
@@ -598,12 +489,8 @@
       "status": "in-progress",
       "priority": "P1",
       "area": "provider",
-      "routes": [
-        "/(provider)/home"
-      ],
-      "files": [
-        "components/provider/InviteCard.tsx"
-      ],
+      "routes": ["/(provider)/home"],
+      "files": ["components/provider/InviteCard.tsx"],
       "testIDs": [
         "prov.invite.card-<id>",
         "prov.invite.view-<id>",
@@ -629,9 +516,7 @@
       "status": "in-progress",
       "priority": "P1",
       "area": "public",
-      "routes": [
-        "/(public)/order/[id]"
-      ],
+      "routes": ["/(public)/order/[id]"],
       "files": [
         "components/public/PublicJobTimeline.tsx",
         "components/public/ProviderInfoCard.tsx",
@@ -668,9 +553,7 @@
       "priority": "P1",
       "area": "public",
       "owner": "@anouar.alh",
-      "routes": [
-        "/(public)/checkout/review"
-      ],
+      "routes": ["/(public)/checkout/review"],
       "files": [
         "components/public/ReviewSection.tsx",
         "components/public/PriceRow.tsx",
@@ -693,13 +576,99 @@
       "acceptance": [
         "Section cards use consistent headers and dividers",
         "Prices right-aligned with MAD unit",
-        "Add-ons render as chips or ‘No add-ons selected’",
+        "Add-ons render as chips or \u2018No add-ons selected\u2019",
         "Footer pill shows Total and duration; Confirm CTA accessible"
       ],
       "evidence": {
         "commits": []
       },
       "notes": "Matches investor-grade polish with minimal code surface"
+    },
+    {
+      "id": "t-032",
+      "title": "Wire Review Order to checkout store",
+      "status": "done",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": ["/(public)/price"],
+      "files": ["lib/public/checkoutStore.ts", "app/(public)/price.tsx"],
+      "testIDs": [
+        "tid.public.price.section.service",
+        "tid.public.price.section.addons",
+        "tid.public.price.section.details",
+        "tid.public.price.section.payment",
+        "pub.review.service.name",
+        "pub.review.service.duration",
+        "pub.review.service.price",
+        "tid.public.price.addon-chip-<id>",
+        "pub.review.addons.none",
+        "pub.review.details.address",
+        "pub.review.details.time",
+        "pub.review.details.vehicle",
+        "pub.review.details.plate",
+        "tid.public.price.total",
+        "tid.public.price.confirm"
+      ],
+      "acceptance": [
+        "Page renders from store state (service, addons, address, vehicle, time, payment) with fallback if store empty",
+        "Total reflects service + addons via calcTotal; duration reflects service.durationMin",
+        "Vehicle section shows make/model + plate when present",
+        "All required testIDs present and functional"
+      ],
+      "evidence": {
+        "commits": []
+      }
+    },
+    {
+      "id": "t-033",
+      "title": "Orders tab (Active/Completed), receipt, and reset after confirm",
+      "status": "done",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": [
+        "/(public)/orders",
+        "/(public)/orders/[id]",
+        "/(public)/confirm"
+      ],
+      "files": [
+        "lib/public/ordersStore.ts",
+        "app/(public)/orders.tsx",
+        "app/(public)/orders/[id].tsx",
+        "app/(public)/confirm.tsx",
+        "app/(public)/_layout.tsx",
+        "app/(public)/price.tsx"
+      ],
+      "testIDs": [
+        "pub.tabs.orders",
+        "pub.orders.active.section",
+        "pub.orders.completed.section",
+        "pub.orders.item-<id>",
+        "pub.orders.resume-<id>",
+        "pub.orders.receipt-<id>",
+        "pub.orders.receipt.title",
+        "pub.orders.receipt.total",
+        "pub.orders.receipt.address",
+        "pub.orders.receipt.time",
+        "pub.orders.receipt.vehicle",
+        "pub.orders.receipt.plate",
+        "pub.order.markComplete"
+      ],
+      "acceptance": [
+        "ordersStore.ts created with active/completed arrays, addActive, completeOrder, findById, removeAll",
+        "Orders tab visible in public layout with icon and testID",
+        "Orders screen shows SectionList with Active (newest first) and Completed (newest first)",
+        "Active orders navigate to progress screen (confirm.tsx); completed navigate to receipt",
+        "Receipt screen displays service, total, address, time, vehicle/plate, completed timestamp",
+        "Confirm Order button creates PublicOrder, calls addActive, resets checkout via clearOrder()",
+        "Mark complete button moves order from active → completed with completedAt timestamp",
+        "Empty states show friendly copy"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Full orders flow for public user journey; includes store persistence, navigation, and checkout reset"
     }
   ]
 }

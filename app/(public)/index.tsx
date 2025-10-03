@@ -15,6 +15,7 @@ import AmountInput from '../../components/ui/AmountInput';
 import type { Place } from '../../types/places';
 import { fmtMoney } from '../../utils/format';
 import { computePricing, type PricingBreakdown } from '../../utils/pricing';
+import { useCheckoutStore } from '@/lib/public/checkoutStore';
 
 // Simple toast helper for one-time messages
 const toastOnce = (message: string) => {
@@ -71,6 +72,7 @@ const CAR_SIZES: Array<{ id: CarSize; label: string; surcharge: number }> = [
 type SheetView = 'services' | 'car-selection';
 
 export default function ServiceHome() {
+  const setOrder = useCheckoutStore((state) => state.setOrder);
   const mapRef = useRef<MapView>(null);
   const sheetRef = useRef<BottomSheet>(null);
   const routeModalRef = useRef<RouteEntryModalRef>(null);
@@ -256,6 +258,25 @@ export default function ServiceHome() {
 
   const onContinue = () => {
     if (!selectedService || !breakdown) return;
+
+    const trimmedAddress = addressLabel && addressLabel !== 'Set pickup location' ? addressLabel : null;
+    const carSizeMeta = CAR_SIZES.find((s) => s.id === carSize);
+
+    setOrder({
+      service: {
+        id: selectedService.id,
+        title: selectedService.title,
+        price: priceTotal,
+        durationMin: selectedService.duration,
+      },
+      addons: [],
+      address: trimmedAddress,
+      vehicle: carSizeMeta
+        ? { makeModel: `${carSizeMeta.label}${vehicleCount > 1 ? ` x${vehicleCount}` : ''}`, plate: 'Pending' }
+        : null,
+      payment: 'Cash on completion',
+      time: null,
+    });
 
     const query = new URLSearchParams({
       serviceId: selectedService.id,

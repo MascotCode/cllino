@@ -10,6 +10,7 @@ import { SegmentPills } from '@/components/ui/SegmentPills';
 import StickyFooter from '@/components/ui/StickyFooter';
 import Title from '@/components/ui/Title';
 import { impact } from '@/lib/haptics';
+import { useCheckoutStore } from '@/lib/public/checkoutStore';
 import { generateSlots, type Slot } from '@/lib/time/slots';
 
 // Constants
@@ -22,6 +23,7 @@ const ETA_RANGE = '≈15–25 min';
 export default function TimeScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
+  const setOrder = useCheckoutStore((state) => state.setOrder);
   const flatListRef = useRef<FlatList>(null);
 
   // State
@@ -94,10 +96,29 @@ export default function TimeScreen() {
 
     if (mode === 'now') {
       existingParams.set('when', 'now');
+      existingParams.delete('slotStart');
+      existingParams.delete('slotEnd');
+      setOrder({ time: { whenLabel: 'Now', fallbackLabel: 'Now' } });
       router.push(`./price?${existingParams.toString()}`);
     } else if (mode === 'today' && selectedId) {
       const selectedSlot = slots.find(s => s.id === selectedId);
       if (selectedSlot) {
+        const startDate = new Date(selectedSlot.startISO);
+        const endDate = new Date(startDate.getTime() + STEP_MIN * 60 * 1000);
+        const formatTime = (date: Date) =>
+          new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: '2-digit', hour12: true }).format(date);
+        const slotStartLabel = formatTime(startDate);
+        const slotEndLabel = formatTime(endDate);
+
+        setOrder({
+          time: {
+            whenLabel: 'Today',
+            slotStart: slotStartLabel,
+            slotEnd: slotEndLabel,
+            fallbackLabel: `${slotStartLabel} - ${slotEndLabel}`,
+          },
+        });
+
         existingParams.set('when', 'schedule');
         existingParams.set('slotStart', selectedSlot.startISO);
         router.push(`./price?${existingParams.toString()}`);

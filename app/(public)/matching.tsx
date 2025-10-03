@@ -1,5 +1,5 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Link } from 'expo-router';
+import { Link, useLocalSearchParams } from 'expo-router';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Badge from '../../components/ui/Badge';
@@ -32,10 +32,14 @@ const PROVIDERS = [
 ];
 
 export default function MatchingScreen() {
+  const params = useLocalSearchParams();
+  const orderId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
+  const confirmHref = orderId ? { pathname: './confirm', params: { id: orderId } } : './confirm';
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <View className="px-4 py-6 flex-1">
-        <Title>Finding your pro…</Title>
+        <Title>Finding your pro.</Title>
 
         <View className="mt-8 gap-4">
           {PROVIDERS.map((provider) => (
@@ -81,7 +85,7 @@ export default function MatchingScreen() {
                 </View>
 
                 {/* Action Button */}
-                <Link href="./confirm" asChild>
+                <Link href={confirmHref} asChild>
                   <Button
                     variant="primary"
                     testID={`choose-${provider.id}`}
