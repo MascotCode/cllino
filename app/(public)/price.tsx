@@ -3,36 +3,40 @@ import { Ionicons } from '@expo/vector-icons';
 import { Link, useLocalSearchParams } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ReviewSection from '@/components/public/ReviewSection';
+import PriceRow from '@/components/public/PriceRow';
+import TotalPill from '@/components/public/TotalPill';
 import { AppButton as Button } from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
 import StickyFooter from '../../components/ui/StickyFooter';
 import Title from '../../components/ui/Title';
-import { fmtMoney } from '../../utils/format';
 
-// MOCK DATA
 const ORDER_SUMMARY = {
   service: {
     id: 'deep',
     name: 'Deep Cleaning',
     ...SERVICE_PRICING.deep
   },
-  addons: [],
+  addons: [] as Array<{ slug: string; label: string; price: number }>,
   address: 'Home - 123 Residence Street',
   timeSlot: 'Today, 2:00 PM - 3:30 PM',
-  payment: 'Cash on completion'
+  payment: 'Cash on completion',
+  notes: undefined as string | undefined
 };
 
 export default function PriceScreen() {
   const params = useLocalSearchParams();
   const total = ORDER_SUMMARY.service.price;
+  const addons = ORDER_SUMMARY.addons;
+  const notes = ORDER_SUMMARY.notes;
 
   const formatTimeSlot = () => {
     if (params.when === 'now') {
       return 'Now';
-    } else if (params.when === 'schedule' && params.slotStart) {
-      const startTime = new Date(params.slotStart as string);
-      const endTime = new Date(startTime.getTime() + 30 * 60 * 1000); // Add 30 minutes
+    }
 
+    if (params.when === 'schedule' && params.slotStart) {
+      const startTime = new Date(params.slotStart as string);
+      const endTime = new Date(startTime.getTime() + 30 * 60 * 1000);
       const timeOptions: Intl.DateTimeFormatOptions = {
         hour: 'numeric',
         minute: '2-digit',
@@ -42,9 +46,10 @@ export default function PriceScreen() {
       const startTimeStr = startTime.toLocaleTimeString('en-US', timeOptions);
       const endTimeStr = endTime.toLocaleTimeString('en-US', timeOptions);
 
-      return `Today, ${startTimeStr} – ${endTimeStr}`;
+      return `Today, ${startTimeStr} - ${endTimeStr}`;
     }
-    return ORDER_SUMMARY.timeSlot; // fallback to mock data
+
+    return ORDER_SUMMARY.timeSlot;
   };
 
   return (
@@ -55,84 +60,83 @@ export default function PriceScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Title>Review Order</Title>
+        <Text className="mt-1 text-[11px] text-gray-400">rev: v-polish</Text>
 
-        <View className="gap-4 mt-8">
-          {/* Service Section */}
-          <Card>
-            <View className="gap-3">
-              <Text className="text-lg font-semibold text-gray-900">Service</Text>
-              <View className="pt-3 border-t border-gray-200">
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="font-medium text-gray-900">{ORDER_SUMMARY.service.name}</Text>
-                    <Text className="text-sm text-gray-500">{ORDER_SUMMARY.service.duration} minutes</Text>
+        <View className="mt-6">
+          <ReviewSection title="Service" testID="pub.review.section.service">
+            <PriceRow
+              label={ORDER_SUMMARY.service.name}
+              secondary={`${ORDER_SUMMARY.service.duration} minutes`}
+              amountMAD={ORDER_SUMMARY.service.price}
+              testID="pub.review.service.price"
+            />
+            <Text className="sr-only" testID="pub.review.service.name">
+              {ORDER_SUMMARY.service.name}
+            </Text>
+            <Text className="sr-only" testID="pub.review.service.duration">
+              {ORDER_SUMMARY.service.duration} minutes
+            </Text>
+          </ReviewSection>
+
+          <ReviewSection title="Add-ons" testID="pub.review.section.addons">
+            {addons?.length ? (
+              <View className="flex-row flex-wrap gap-2">
+                {addons.map(addon => (
+                  <View
+                    key={addon.slug}
+                    className="rounded-full border border-gray-200 bg-gray-50 px-3 py-1"
+                  >
+                    <Text testID={`pub.review.addons.chip-${addon.slug}`}>{addon.label}</Text>
                   </View>
-                  <Text className="font-medium text-gray-900">{fmtMoney(ORDER_SUMMARY.service.price)}</Text>
-                </View>
+                ))}
               </View>
-            </View>
-          </Card>
+            ) : (
+              <Text className="text-gray-500" testID="pub.review.addons.none">
+                No add-ons selected
+              </Text>
+            )}
+          </ReviewSection>
 
-          {/* Add-ons Section */}
-          <Card>
-            <View className="gap-3">
-              <Text className="text-lg font-semibold text-gray-900">Add-ons</Text>
-              <View className="pt-3 border-t border-gray-200">
-                <Text className="py-2 text-center text-gray-500">No add-ons selected</Text>
-              </View>
+          <ReviewSection title="Details" testID="pub.review.section.details">
+            <View className="flex-row items-start gap-2">
+              <Ionicons name="location-outline" size={16} color="#6b7280" />
+              <Text className="flex-1 text-gray-800" testID="pub.review.details.address">
+                {ORDER_SUMMARY.address}
+              </Text>
             </View>
-          </Card>
+            <View className="flex-row items-start gap-2">
+              <Ionicons name="time-outline" size={16} color="#6b7280" />
+              <Text className="flex-1 text-gray-800" testID="pub.review.details.time">
+                {formatTimeSlot()}
+              </Text>
+            </View>
+            {!!notes && (
+              <View className="flex-row items-start gap-2">
+                <Ionicons name="document-text-outline" size={16} color="#6b7280" />
+                <Text className="flex-1 text-gray-800" testID="pub.review.details.notes">
+                  {notes}
+                </Text>
+              </View>
+            )}
+          </ReviewSection>
 
-          {/* Details Section */}
-          <Card>
-            <View className="gap-3">
-              <Text className="text-lg font-semibold text-gray-900">Details</Text>
-              <View className="gap-3 pt-3 border-t border-gray-200">
-                <View className="flex-row items-start gap-3">
-                  <Ionicons name="location" size={16} color="#6b7280" />
-                  <View className="flex-1">
-                    <Text className="text-sm text-gray-500">Address</Text>
-                    <Text className="text-gray-900">{ORDER_SUMMARY.address}</Text>
-                  </View>
-                </View>
-                <View className="flex-row items-start gap-3">
-                  <Ionicons name="time" size={16} color="#6b7280" />
-                  <View className="flex-1">
-                    <Text className="text-sm text-gray-500">Time Slot</Text>
-                    <Text className="text-gray-900">{formatTimeSlot()}</Text>
-                  </View>
-                </View>
-              </View>
+          <ReviewSection title="Payment" testID="pub.review.section.payment">
+            <View className="flex-row items-center gap-2">
+              <Ionicons name="cash-outline" size={18} color="#6b7280" />
+              <Text className="text-gray-800" testID="pub.review.payment.cash">
+                Cash on completion
+              </Text>
             </View>
-          </Card>
-
-          {/* Payment Section */}
-          <Card>
-            <View className="gap-3">
-              <Text className="text-lg font-semibold text-gray-900">Payment</Text>
-              <View className="pt-3 border-t border-gray-200">
-                <View className="flex-row items-center gap-3">
-                  <Ionicons name="cash" size={16} color="#6b7280" />
-                  <Text className="text-gray-900">{ORDER_SUMMARY.payment}</Text>
-                </View>
-              </View>
-            </View>
-          </Card>
+          </ReviewSection>
         </View>
       </ScrollView>
 
-      {/* Sticky Footer */}
       <StickyFooter>
-        <View className="p-4 mb-4 bg-gray-50 rounded-xl">
-          <View className="flex-row items-center justify-center gap-2">
-            <Text className="text-xl font-bold text-gray-900">Total: {fmtMoney(total)}</Text>
-            <Text className="text-gray-500">•</Text>
-            <Text className="text-gray-500">{ORDER_SUMMARY.service.duration} mins</Text>
-          </View>
+        <View className="mb-3">
+          <TotalPill totalMAD={total} durationMins={ORDER_SUMMARY.service.duration} />
         </View>
-
         <Link href="./matching" asChild>
-          <Button variant="primary" testID="confirm-order" className="w-full">
+          <Button variant="primary" testID="pub.review.confirm" className="w-full">
             Confirm Order
           </Button>
         </Link>

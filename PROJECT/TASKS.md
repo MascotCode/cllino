@@ -41,6 +41,17 @@ _Last sync: 2025-10-01T17:43:52Z • Branch: main • Head: 5bee973_
     - Footer CTA unaffected; safe-area respected
 
 
+- [ ] Public order progress polish (timeline + provider card) (ID: t-030) — Owner: @anouar.alh • Area: public • Status: in-progress
+  - Replace repeated chips with vertical timeline (PublicJobTimeline)
+  - New ProviderInfoCard with tight stars, ETA pill, vehicle + plate, cash notice
+  - Footer CTA unchanged; safe-area respected
+  - TestIDs: pub.order.provider.name|rating|eta|vehicle|plate|cashNotice, pub.order.step-*, pub.order.markComplete
+  - Files: components/public/PublicJobTimeline.tsx, components/public/ProviderInfoCard.tsx, app/(public)/confirm.tsx
+  - Acceptance:
+    - Only one status chip on header
+    - Timeline reflects current step & styles (completed/current/pending)
+    - Provider card shows ETA, rating (tight), vehicle, plate, cash notice
+
 ### NEXT
 - [ ] Persist provider profile + availability to storage (ID: t-002) — Owner: TBA • Area: core • Status: planned
   - Why: In-memory mock store drops profile/online state on reload so providers lose access after app restarts.
@@ -190,3 +201,12 @@ _Last sync: 2025-10-01T17:43:52Z • Branch: main • Head: 5bee973_
 3. If acceptance criteria change, add a bullet under the task with date + SHA.
 4. Reference **testIDs** and **routes** in acceptance criteria.
 
+- [ ] Review Order polish (public checkout) (ID: t-031) — Owner: @anouar.alh • Area: public • Status: in-progress
+  - Add primitives: ReviewSection, PriceRow, TotalPill
+  - Rewire screen: Service, Add-ons chips, Details (address/time/notes), Payment (cash)
+  - Footer shows Total pill + Confirm CTA
+  - TestIDs: pub.review.* (see list)
+  - Acceptance:
+    - Prices right-aligned with MAD unit
+    - Add-ons show chips or “No add-ons selected”
+    - Footer pill: “Total: X MAD · Y mins”; Confirm visible and ≥44dp

@@ -353,7 +353,7 @@ export default function ServiceHome() {
               {/* Search bar - tappable to open modal */}
               <Pressable
                 onPress={openRouteModal}
-                className="flex-row items-center px-component py-element bg-surface-0 border border-border-subtle rounded-2xl active:opacity-80 shadow-subtle"
+                className="flex-row items-center border px-component py-element bg-surface-0 border-border-subtle rounded-2xl active:opacity-80 shadow-subtle"
                 testID="search-pill"
               >
                 <Ionicons name="search" size={18} color="#6B7280" />
@@ -363,20 +363,20 @@ export default function ServiceHome() {
               </Pressable>
 
               {/* Segment */}
-              <View className="flex-row p-minimal mt-section bg-surface-100 rounded-full">
-                <Pressable className="items-center flex-1 py-tight bg-surface-0 rounded-full">
+              <View className="flex-row rounded-full p-minimal mt-section bg-surface-100">
+                <Pressable className="items-center flex-1 rounded-full py-tight bg-surface-0">
                   <View className="flex-row items-center gap-tight">
                     <Ionicons name="car" size={16} color="#2563eb" />
                     <Text className="text-sm font-semibold text-text-primary">Car Wash</Text>
                   </View>
                 </Pressable>
-                <Pressable className="items-center flex-1 py-tight opacity-50" disabled>
+                <Pressable className="items-center flex-1 opacity-50 py-tight" disabled>
                   <View className="flex-row items-center gap-tight">
                     <Ionicons name="bicycle" size={16} color="#6b7280" />
                     <Text className="text-sm text-text-secondary">Motorcycle</Text>
                   </View>
                 </Pressable>
-                <Pressable className="items-center flex-1 py-tight opacity-50" disabled>
+                <Pressable className="items-center flex-1 opacity-50 py-tight" disabled>
                   <View className="flex-row items-center gap-tight">
                     <MaterialIcons name="local-shipping" size={16} color="#6b7280" />
                     <Text className="text-sm text-text-secondary">Trucks</Text>
@@ -390,7 +390,7 @@ export default function ServiceHome() {
                   <Pressable
                     key={svc.id}
                     onPress={() => onSelectService(svc)}
-                    className="p-component bg-surface-0 border border-border-subtle shadow-card rounded-2xl active:opacity-90"
+                    className="border p-component bg-surface-0 border-border-subtle shadow-card rounded-2xl active:opacity-90"
                     testID={`svc-${svc.id}`}
                   >
                     <View className="flex-row items-center justify-between">
@@ -530,7 +530,7 @@ export default function ServiceHome() {
                   <View className="mb-3">
                     <Text className="mb-2 text-base font-medium text-gray-900">Estimated total</Text>
 
-                    <View className="flex-row items-center gap-2">
+                    <View className="flex-row items-center gap-2 pl-12 mx-auto">
                       <AmountInput
                         testID="tid.price"
                         value={priceTotal}
@@ -545,7 +545,7 @@ export default function ServiceHome() {
                           setPriceTotal(v);
                         }}
                       />
-                      <Text className="text-lg font-semibold text-blue-600">MAD</Text>
+                      <Text className="font-semibold text-blue-600">MAD</Text>
                     </View>
                   </View>
                 )}

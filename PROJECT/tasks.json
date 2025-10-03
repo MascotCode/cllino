@@ -337,7 +337,7 @@
       "acceptance": [
         "Cash reminder extracted to reusable primitive with consistent spacing and copy.",
         "Home and Earnings consume the primitive; Complete retains NoticeBanner.",
-        "CTA touch targets stay \u226544dp; learn-more exposes cash-notice.learn testID."
+        "CTA touch targets stay ≥44dp; learn-more exposes cash-notice.learn testID."
       ],
       "evidence": {
         "commits": [
@@ -372,7 +372,7 @@
     },
     {
       "id": "t-021",
-      "title": "Auth (Supabase) \u2014 email OTP + session",
+      "title": "Auth (Supabase) — email OTP + session",
       "status": "planned",
       "priority": "P1",
       "area": "auth",
@@ -512,7 +512,7 @@
       ],
       "testIDs": [],
       "acceptance": [
-        "Edge function receives log when idle \u226560s with pending invite",
+        "Edge function receives log when idle ≥60s with pending invite",
         "No behavioral auto-assign (log only)"
       ],
       "evidence": null,
@@ -622,6 +622,84 @@
       },
       "notes": "Invite card layout refresh emphasizing CTA hierarchy and tight rating row",
       "owner": "@anouar.alh"
+    },
+    {
+      "id": "t-030",
+      "title": "Public order progress polish (timeline + provider card)",
+      "status": "in-progress",
+      "priority": "P1",
+      "area": "public",
+      "routes": [
+        "/(public)/order/[id]"
+      ],
+      "files": [
+        "components/public/PublicJobTimeline.tsx",
+        "components/public/ProviderInfoCard.tsx",
+        "app/(public)/order/[id].tsx"
+      ],
+      "testIDs": [
+        "pub.order.provider.name",
+        "pub.order.provider.rating",
+        "pub.order.eta",
+        "pub.order.vehicle",
+        "pub.order.plate",
+        "pub.order.cashNotice",
+        "pub.order.step-assigned",
+        "pub.order.step-onTheWay",
+        "pub.order.step-working",
+        "pub.order.step-completed",
+        "pub.order.markComplete"
+      ],
+      "acceptance": [
+        "No duplicate chips in the list; header chip only",
+        "Vertical timeline renders 4 steps with correct state",
+        "Provider card shows ETA, rating (tight), vehicle + plate, and cash notice",
+        "Footer CTA visible and not clipped"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Public flow mirrors provider polish; safe-area + spacing 16/20/24"
+    },
+    {
+      "id": "t-031",
+      "title": "Review Order polish (public checkout)",
+      "status": "in-progress",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": [
+        "/(public)/checkout/review"
+      ],
+      "files": [
+        "components/public/ReviewSection.tsx",
+        "components/public/PriceRow.tsx",
+        "components/public/TotalPill.tsx",
+        "app/(public)/checkout/review.tsx"
+      ],
+      "testIDs": [
+        "pub.review.service.name",
+        "pub.review.service.duration",
+        "pub.review.service.price",
+        "pub.review.addons.none",
+        "pub.review.addons.chip-<slug>",
+        "pub.review.details.address",
+        "pub.review.details.time",
+        "pub.review.details.notes",
+        "pub.review.payment.cash",
+        "pub.review.total",
+        "pub.review.confirm"
+      ],
+      "acceptance": [
+        "Section cards use consistent headers and dividers",
+        "Prices right-aligned with MAD unit",
+        "Add-ons render as chips or ‘No add-ons selected’",
+        "Footer pill shows Total and duration; Confirm CTA accessible"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Matches investor-grade polish with minimal code surface"
     }
   ]
 }
