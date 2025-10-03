@@ -755,6 +755,90 @@
         "commits": []
       },
       "notes": "Polished address selection with search, current location, map picker, saved addresses; wired to checkoutStore.address with graceful fallbacks and permission handling"
+    },
+    {
+      "id": "t-037",
+      "title": "Live geocoding/search toggle (Google ↔ Mock)",
+      "status": "in-progress",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": ["/(public)/address/select", "/(public)/address/map"],
+      "files": [
+        "utils/geocode.ts",
+        "constants/env.ts",
+        "app.config.ts",
+        "app/(public)/address/select.tsx",
+        "app/(public)/address/map.tsx"
+      ],
+      "testIDs": [
+        "address.modal.search",
+        "address.modal.useLocation",
+        "address.modal.chooseOnMap",
+        "address.map.pin",
+        "address.map.confirm"
+      ],
+      "acceptance": [
+        "Env `EXPO_PUBLIC_GEO_LIVE` switches live/mock without UI changes",
+        "Google Places/Geocoding wired with caching + graceful fallback",
+        "Selecting by search/map/location writes formatted real address and dismisses",
+        "All existing testIDs unchanged"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Replace mock geocoding with real Google Places + Geocoding APIs while preserving UI/testIDs; environment toggle controls data source"
+    },
+    {
+      "id": "t-038",
+      "title": "Map picker: fixed center pin (inDrive-style)",
+      "status": "done",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": ["/(public)/address/map"],
+      "files": ["app/(public)/address/map.tsx", "utils/geocode.ts"],
+      "testIDs": ["address.map.pin", "address.map.confirm"],
+      "acceptance": [
+        "Draggable marker replaced by fixed overlay pin (testID: address.map.pin)",
+        "Map pans under finger; reverse-geocode on region stop (debounced 400ms)",
+        "Confirm writes formatted address and coords to checkoutStore.addressCoords",
+        "Recenter FAB recenters to user location",
+        "Pin shows bounce animation after geocoding completes",
+        "All existing testIDs unchanged"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "inDrive-style map picker with fixed center pin; map pans underneath; debounced reverse geocoding with 30m threshold; recenter FAB; pin bounce animation on region change complete"
+    },
+    {
+      "id": "t-039",
+      "title": "Fix locate-me & add Home 'Choose on map'",
+      "status": "in-progress",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": ["/(public)/address/map", "/(public)"],
+      "files": [
+        "app/(public)/address/map.tsx",
+        "app/(public)/index.tsx",
+        "utils/geocode.ts"
+      ],
+      "testIDs": [
+        "address.map.recenter",
+        "home.chooseOnMap",
+        "home.locateMe",
+        "tid.home.map"
+      ],
+      "acceptance": [
+        "Map recenter FAB fetches GPS, animates, reverse-geocodes",
+        "Home locate-me updates both map and checkoutStore.address",
+        "Home shows new 'Choose on map' under search and navigates to picker",
+        "All permission-denied cases handled gracefully"
+      ],
+      "evidence": null,
+      "notes": "Implements permission flow, debounced reverse geocoding, store updates, and navigation CTA"
     }
   ]
 }

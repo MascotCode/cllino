@@ -1,5 +1,6 @@
 import { CAR_SIZE_SURCHARGES, SERVICE_PRICING, type CarSize, type ServiceId } from '@/constants/pricing';
 import { useCheckoutStore } from '@/lib/public/checkoutStore';
+import { reverseGeocode } from '@/utils/geocode';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, {
   BottomSheetScrollView
@@ -8,7 +9,7 @@ import * as IntentLauncher from 'expo-intent-launcher';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
-import { Alert, Linking, Modal, Platform, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Alert, Linking, Modal, Platform, Pressable, Text, View } from 'react-native';
 import MapView, { Camera, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import type { RouteEntryModalRef } from '../../components/search/RouteEntryModal';
 import RouteEntryModal from '../../components/search/RouteEntryModal';
@@ -74,6 +75,7 @@ type SheetView = 'services' | 'car-selection';
 export default function ServiceHome() {
   const setOrder = useCheckoutStore((state) => state.setOrder);
   const address = useCheckoutStore((state) => state.address);
+  const addressCoords = useCheckoutStore((state) => state.addressCoords);
   const mapRef = useRef<MapView>(null);
   const sheetRef = useRef<BottomSheet>(null);
   const routeModalRef = useRef<RouteEntryModalRef>(null);
@@ -103,18 +105,45 @@ export default function ServiceHome() {
     longitudeDelta: 0.05,
   };
 
-  const reverseGeocode = async (lat: number, lng: number) => {
+  // Haversine + debounce for reverse geocoding after region settles
+  const GEOCODE_DEBOUNCE_MS = 400;
+  const DISTANCE_THRESHOLD_METERS = 30;
+
+  const geocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastGeocodedRef = useRef<{ lat: number; lng: number } | null>(null);
+
+  const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
+    const R = 6371000;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLng = ((lng2 - lng1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const performReverseGeocodeAndUpdateStore = async (lat: number, lng: number) => {
+    // Threshold guard
+    if (lastGeocodedRef.current) {
+      const d = haversineDistance(lastGeocodedRef.current.lat, lastGeocodedRef.current.lng, lat, lng);
+      if (d < DISTANCE_THRESHOLD_METERS) return;
+    }
+
+    lastGeocodedRef.current = { lat, lng };
     try {
-      const results = await Location.reverseGeocodeAsync({ latitude: lat, longitude: lng });
-      const best = results?.[0];
-      if (best) {
-        const line = [best.name, best.street, best.city].filter(Boolean).join(', ');
-        setAddressLabel(line || 'Current location');
-      } else {
-        setAddressLabel('Current location');
-      }
+      const res = await reverseGeocode(lat, lng);
+      const formatted = res.subtitle ? `${res.title}, ${res.subtitle}` : res.title;
+      setAddressLabel(formatted || 'Current location');
+      AccessibilityInfo.announceForAccessibility?.(`Updated address to ${formatted}`);
+      useCheckoutStore.getState().setOrder({
+        address: formatted,
+        addressCoords: { label: formatted, lat, lng },
+      });
     } catch {
-      setAddressLabel('Current location');
+      // Keep silent fallback
     }
   };
 
@@ -156,7 +185,11 @@ export default function ServiceHome() {
 
       const { latitude, longitude } = pos.coords;
       setCoords({ lat: latitude, lng: longitude });
-      await reverseGeocode(latitude, longitude);
+      // Animate first; geocoding will run after region settles
+      if (geocodeTimerRef.current) { clearTimeout(geocodeTimerRef.current); geocodeTimerRef.current = null; }
+      geocodeTimerRef.current = setTimeout(() => {
+        performReverseGeocodeAndUpdateStore(latitude, longitude);
+      }, GEOCODE_DEBOUNCE_MS);
 
       mapRef.current?.animateToRegion(
         { latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
@@ -185,6 +218,28 @@ export default function ServiceHome() {
     // Toggle pin-choose mode - placeholder for future implementation
     console.log('Choose on map mode activated');
   };
+
+  // Sync with stored address coordinates when returning from address picker
+  useEffect(() => {
+    if (addressCoords?.lat && addressCoords?.lng) {
+      setCoords({ lat: addressCoords.lat, lng: addressCoords.lng });
+      setAddressLabel(addressCoords.label);
+
+      // Animate map to the selected location
+      mapRef.current?.animateToRegion(
+        {
+          latitude: addressCoords.lat,
+          longitude: addressCoords.lng,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        },
+        500
+      );
+    } else if (address && !addressCoords) {
+      // Fallback: if we have address text but no coords (legacy data)
+      setAddressLabel(address);
+    }
+  }, [addressCoords, address]);
 
   // Car selection handlers
   const onSelectService = (service: typeof SERVICES[0]) => {
@@ -334,7 +389,13 @@ export default function ServiceHome() {
         onPanDrag={() => hideSheet(0)}
         onTouchEnd={() => showSheet(200)}
         onTouchCancel={() => showSheet(200)}
-        onRegionChangeComplete={() => showSheet(0)}
+        onRegionChangeComplete={(region) => {
+          showSheet(0);
+          if (geocodeTimerRef.current) { clearTimeout(geocodeTimerRef.current); geocodeTimerRef.current = null; }
+          geocodeTimerRef.current = setTimeout(() => {
+            performReverseGeocodeAndUpdateStore(region.latitude, region.longitude);
+          }, GEOCODE_DEBOUNCE_MS);
+        }}
       >
         {coords && (
           <Marker coordinate={{ latitude: coords.lat, longitude: coords.lng }} />
@@ -343,7 +404,7 @@ export default function ServiceHome() {
 
       {/* Floating Locate Me FAB - moved to top-right to avoid modal overlap */}
       <Pressable
-        testID="tid.map.locateFab"
+        testID="home.locateMe"
         onPress={onUseMyLocation}
         className="absolute items-center justify-center w-12 h-12 bg-white border border-gray-200 rounded-full shadow-sm top-24 right-4"
         style={{ zIndex: 30 }}
@@ -382,6 +443,18 @@ export default function ServiceHome() {
                 <Text className="flex-1 ml-tight text-text-primary" numberOfLines={1}>
                   {address || 'Enter pickup or service location'}
                 </Text>
+              </Pressable>
+
+              {/* Secondary CTA: Choose on map */}
+              <Pressable
+                onPress={() => router.push('/(public)/address/map')}
+                testID="home.chooseOnMap"
+                className="flex-row items-center justify-center gap-2 mt-3 py-3 px-3 bg-surface-0 border border-border-subtle rounded-2xl active:opacity-85"
+                accessibilityRole="button"
+                accessibilityLabel="Choose location on map"
+              >
+                <Ionicons name="map-outline" size={18} color="#2563eb" />
+                <Text className="text-sm font-semibold text-blue-700">Choose on map</Text>
               </Pressable>
 
               {/* Segment */}

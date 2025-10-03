@@ -29,10 +29,17 @@ export type TimeInfo = {
 
 const DEFAULT_PAYMENT = 'Cash on completion';
 
+export type AddressWithCoords = {
+  label: string;
+  lat?: number;
+  lng?: number;
+};
+
 export type CheckoutState = {
   service: Service | null;
   addons: Addon[];
   address: string | null;
+  addressCoords: AddressWithCoords | null;
   vehicle: Vehicle | null;
   time: TimeInfo | null;
   payment: string;
@@ -47,6 +54,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       service: null,
       addons: [],
       address: null,
+      addressCoords: null,
       vehicle: null,
       time: null,
       payment: DEFAULT_PAYMENT,
@@ -56,6 +64,7 @@ export const useCheckoutStore = create<CheckoutState>()(
           service: payload.service ?? state.service,
           addons: payload.addons ?? state.addons,
           address: payload.address ?? state.address,
+          addressCoords: payload.addressCoords ?? state.addressCoords,
           vehicle: payload.vehicle ?? state.vehicle,
           time: payload.time ?? state.time,
           payment: payload.payment ?? state.payment ?? DEFAULT_PAYMENT,
@@ -65,6 +74,7 @@ export const useCheckoutStore = create<CheckoutState>()(
           service: null,
           addons: [],
           address: null,
+          addressCoords: null,
           vehicle: null,
           time: null,
           payment: DEFAULT_PAYMENT,

@@ -112,6 +112,70 @@ _Last sync: 2025-10-01T17:43:52Z • Branch: main • Head: 5bee973_
 
     - All touch targets ≥44dp and safe-area respected
 
+- [ ] Live geocoding/search toggle (Google ↔ Mock) (ID: t-037) — Owner: @anouar.alh • Area: public • Status: in-progress
+
+  - Replace mock geocoding with real Google Places + Geocoding APIs while preserving UI/testIDs
+
+  - Environment toggle: `EXPO_PUBLIC_GEO_LIVE=1` switches to live APIs, `=0` uses mock data
+
+  - Files: utils/geocode.ts, constants/env.ts, app.config.ts, app/(public)/address/select.tsx, app/(public)/address/map.tsx
+
+  - Acceptance:
+
+    - Env `EXPO_PUBLIC_GEO_LIVE` switches live/mock without UI changes
+
+    - Google Places/Geocoding wired with caching + graceful fallback
+
+    - Selecting by search/map/location writes formatted real address and dismisses
+
+    - All existing testIDs unchanged
+
+- [ ] Map picker: fixed center pin (inDrive-style) (ID: t-038) — Owner: @anouar.alh • Area: public • Status: done
+
+  - Replace draggable marker with fixed overlay pin at map center; pan map underneath
+
+  - Debounced reverse geocoding on region change with 30m threshold to reduce API calls
+
+  - Recenter FAB to navigate back to user location
+
+  - Pin bounce animation on region change complete
+
+  - Files: app/(public)/address/map.tsx, utils/geocode.ts
+
+  - TestIDs: address.map.pin, address.map.confirm (unchanged)
+
+  - Acceptance:
+
+    - Draggable marker replaced by fixed overlay pin (testID: address.map.pin)
+
+    - Map pans under finger; reverse-geocode on region stop (debounced 400ms)
+
+    - Confirm writes formatted address and coords to checkoutStore.addressCoords
+
+    - Recenter FAB recenters to user location
+
+    - Pin shows bounce animation after geocoding completes
+
+    - All existing testIDs unchanged
+
+- [ ] Fix locate-me & add Home 'Choose on map' (ID: t-039) — Owner: @anouar.alh • Area: public • Status: in-progress
+
+- Routes: `/(public)/address/map`, `/(public)`
+
+- Files: `app/(public)/address/map.tsx`, `app/(public)/index.tsx`, `utils/geocode.ts`
+
+- TestIDs: address.map.recenter, home.chooseOnMap, home.locateMe, tid.home.map
+
+- Acceptance:
+
+  - Map recenter FAB fetches GPS, animates, reverse-geocodes
+
+  - Home locate-me updates both map and checkoutStore.address
+
+  - Home shows new 'Choose on map' under search and navigates to picker
+
+  - All permission-denied cases handled gracefully
+
 ### NEXT
 
 - [ ] Persist provider profile + availability to storage (ID: t-002) — Owner: TBA • Area: core • Status: planned

@@ -87,13 +87,16 @@ export default function AddressSelectScreen() {
 
     // Handle address selection
     const handleSelectAddress = useCallback(
-        (address: string) => {
-            setOrder({ address });
+        (address: string, lat?: number, lng?: number) => {
+            setOrder({
+                address,
+                addressCoords: { label: address, lat, lng }
+            });
             // Navigate back
             if (router.canGoBack()) {
                 router.back();
             } else {
-                router.replace('/(public)/');
+                router.replace('/');
             }
         },
         [setOrder]
@@ -145,7 +148,7 @@ export default function AddressSelectScreen() {
                 ? `${geocoded.title}, ${geocoded.subtitle}`
                 : geocoded.title;
 
-            handleSelectAddress(formattedAddress);
+            handleSelectAddress(formattedAddress, latitude, longitude);
         } catch (error) {
             console.warn('Location error:', error);
             Alert.alert(
@@ -199,7 +202,7 @@ export default function AddressSelectScreen() {
                 <Pressable
                     testID="address.modal.dismiss"
                     onPress={() => router.back()}
-                    className="w-10 h-10 items-center justify-center rounded-full active:bg-gray-100"
+                    className="items-center justify-center w-10 h-10 rounded-full active:bg-gray-100"
                     accessibilityRole="button"
                     accessibilityLabel="Close"
                 >
@@ -226,7 +229,7 @@ export default function AddressSelectScreen() {
             >
                 {/* Quick Actions - only show when not searching */}
                 {!showSearchResults && (
-                    <View className="mt-5 gap-3">
+                    <View className="gap-3 mt-5">
                         {/* Use Current Location */}
                         {locationLoading ? (
                             <Card className="flex-row items-center py-4">
@@ -248,7 +251,7 @@ export default function AddressSelectScreen() {
                         {permissionDenied && (
                             <Card
                                 testID="address.modal.permissionDenied"
-                                className="bg-red-50 border-red-200"
+                                className="border-red-200 bg-red-50"
                             >
                                 <View className="flex-row items-start gap-3">
                                     <Ionicons name="alert-circle" size={20} color="#DC2626" />
@@ -256,12 +259,12 @@ export default function AddressSelectScreen() {
                                         <Text className="text-sm font-medium text-red-900">
                                             Location permission denied
                                         </Text>
-                                        <Text className="text-xs text-red-700 mt-1">
+                                        <Text className="mt-1 text-xs text-red-700">
                                             Allow location access in Settings to use your current location.
                                         </Text>
                                         <Pressable
                                             onPress={handleOpenSettings}
-                                            className="mt-3 py-2 px-4 bg-red-600 rounded-lg active:bg-red-700 self-start"
+                                            className="self-start px-4 py-2 mt-3 bg-red-600 rounded-lg active:bg-red-700"
                                         >
                                             <Text className="text-sm font-semibold text-white">Open Settings</Text>
                                         </Pressable>
@@ -292,7 +295,7 @@ export default function AddressSelectScreen() {
                                 iconColor="#3B82F6"
                                 title={addr.label}
                                 subtitle={addr.address}
-                                onPress={() => handleSelectAddress(addr.address)}
+                                onPress={() => handleSelectAddress(addr.address, addr.lat, addr.lng)}
                             />
                         ))}
 
@@ -319,7 +322,7 @@ export default function AddressSelectScreen() {
                                 iconColor="#6B7280"
                                 title={addr.title}
                                 subtitle={addr.subtitle}
-                                onPress={() => handleSelectAddress(formatAddress(addr))}
+                                onPress={() => handleSelectAddress(formatAddress(addr), addr.lat, addr.lng)}
                             />
                         ))}
                     </ListSection>
@@ -341,7 +344,7 @@ export default function AddressSelectScreen() {
 
                         {/* Empty state */}
                         {isEmpty && (
-                            <View testID="address.modal.empty" className="py-8 items-center">
+                            <View testID="address.modal.empty" className="items-center py-8">
                                 <Ionicons name="search-outline" size={48} color="#D1D5DB" />
                                 <Text className="mt-4 text-base text-gray-500">
                                     No results for &quot;{query}&quot;
@@ -361,7 +364,7 @@ export default function AddressSelectScreen() {
                                     iconColor="#6B7280"
                                     title={result.title}
                                     subtitle={result.subtitle}
-                                    onPress={() => handleSelectAddress(formatAddress(result))}
+                                    onPress={() => handleSelectAddress(formatAddress(result), result.lat, result.lng)}
                                 />
                             ))}
                     </ListSection>
