@@ -1,16 +1,11 @@
 declare const __DEV__: boolean;
 
-export type Interaction = {
+export type AnalyticsEvent = {
+  route: string;
   elementId: string;
-  route?: string;
-  meta?: Record<string, unknown>;
+  meta?: Record<string, any>;
 };
 
-export function logInteraction(event: Interaction): void {
-  const isDev = typeof __DEV__ !== 'undefined' ? __DEV__ : process.env.NODE_ENV !== 'production';
-
-  if (isDev) {
-    // eslint-disable-next-line no-console
-    console.log('[analytics]', event);
-  }
-}
+export const logInteraction = (e: AnalyticsEvent) => {
+  if (__DEV__) console.log('[ANALYTICS]', e);
+};

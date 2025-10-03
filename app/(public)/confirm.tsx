@@ -1,14 +1,15 @@
+import { useOrdersStore, type PublicOrder } from '@/lib/public/ordersStore';
+import { logInteraction } from '@/utils/analytics';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useMemo } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import ProviderInfoCard from '../../components/public/ProviderInfoCard';
+import PublicJobTimeline, { PublicTimelineStep } from '../../components/public/PublicJobTimeline';
 import Badge from '../../components/ui/Badge';
 import { AppButton as Button } from '../../components/ui/Button';
 import StickyFooter from '../../components/ui/StickyFooter';
 import Title from '../../components/ui/Title';
-import ProviderInfoCard from '../../components/public/ProviderInfoCard';
-import PublicJobTimeline, { PublicTimelineStep } from '../../components/public/PublicJobTimeline';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useOrdersStore, type PublicOrder } from '@/lib/public/ordersStore';
 
 type JobStepDefinition = {
   key: PublicTimelineStep['key'];
@@ -120,6 +121,13 @@ export default function ConfirmScreen() {
   }, [order?.status, currentStepKey]);
 
   const handleMarkComplete = () => {
+    // Log analytics
+    logInteraction({
+      route: '/(public)/confirm',
+      elementId: 'pub.order.markComplete',
+      meta: { orderId, service: order?.serviceTitle }
+    });
+
     if (orderId) {
       completeOrder(orderId);
     }
@@ -131,11 +139,11 @@ export default function ConfirmScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <View className="flex-1 px-4 py-6">
+      <ScrollView className="flex-1 px-4 py-6" showsVerticalScrollIndicator={false}>
         <View className="flex-row items-center justify-between mb-6">
           <View>
             <Title>{order?.serviceTitle ?? 'Provider assigned'}</Title>
-            <Text className="text-sm text-gray-500 mt-1">{formatOrderTime(order)}</Text>
+            <Text className="mt-1 text-sm text-gray-500">{formatOrderTime(order)}</Text>
           </View>
           <Badge variant={order?.status === 'completed' ? 'success' : 'neutral'}>{statusLabel}</Badge>
         </View>
@@ -149,24 +157,24 @@ export default function ConfirmScreen() {
         />
 
         {order && (
-          <View className="mt-4 rounded-2xl border border-gray-200 bg-gray-50 p-4">
+          <View className="p-4 mt-4 border border-gray-200 rounded-2xl bg-gray-50">
             <Text className="text-sm font-semibold text-gray-700">Details</Text>
-            <View className="mt-3 gap-2">
+            <View className="gap-2 mt-3">
               <Text className="text-sm text-gray-500">Address</Text>
               <Text className="text-base text-gray-900">{order.address}</Text>
-              <Text className="text-sm text-gray-500 mt-3">Created</Text>
+              <Text className="mt-3 text-sm text-gray-500">Created</Text>
               <Text className="text-base text-gray-900">{new Date(order.createdAt).toLocaleString()}</Text>
             </View>
           </View>
         )}
 
-        <View className="mt-6 flex-1">
-          <Text className="text-lg font-semibold text-gray-900 mb-3">Status</Text>
+        <View className="mt-6 mb-6">
+          <Text className="mb-3 text-lg font-semibold text-gray-900">Status</Text>
           <PublicJobTimeline steps={steps} />
         </View>
-      </View>
+      </ScrollView>
 
-      <StickyFooter testID="pub.stickyFooter">
+      <StickyFooter>
         <Button
           variant="primary"
           testID="pub.order.markComplete"

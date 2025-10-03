@@ -1,4 +1,5 @@
 import { CAR_SIZE_SURCHARGES, SERVICE_PRICING, type CarSize, type ServiceId } from '@/constants/pricing';
+import { useCheckoutStore } from '@/lib/public/checkoutStore';
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import BottomSheet, {
   BottomSheetScrollView
@@ -15,7 +16,6 @@ import AmountInput from '../../components/ui/AmountInput';
 import type { Place } from '../../types/places';
 import { fmtMoney } from '../../utils/format';
 import { computePricing, type PricingBreakdown } from '../../utils/pricing';
-import { useCheckoutStore } from '@/lib/public/checkoutStore';
 
 // Simple toast helper for one-time messages
 const toastOnce = (message: string) => {
@@ -73,6 +73,7 @@ type SheetView = 'services' | 'car-selection';
 
 export default function ServiceHome() {
   const setOrder = useCheckoutStore((state) => state.setOrder);
+  const address = useCheckoutStore((state) => state.address);
   const mapRef = useRef<MapView>(null);
   const sheetRef = useRef<BottomSheet>(null);
   const routeModalRef = useRef<RouteEntryModalRef>(null);
@@ -168,7 +169,7 @@ export default function ServiceHome() {
     }
   };
 
-  const openRouteModal = () => routeModalRef.current?.open();
+  const openRouteModal = () => router.push('/(public)/address/select');
 
   const onSelectPlace = (place: Place) => {
     setAddressLabel(place.title);
@@ -371,7 +372,7 @@ export default function ServiceHome() {
         >
           {sheetView === 'services' ? (
             <>
-              {/* Search bar - tappable to open modal */}
+              {/* Search bar - tappable to open address selection */}
               <Pressable
                 onPress={openRouteModal}
                 className="flex-row items-center border px-component py-element bg-surface-0 border-border-subtle rounded-2xl active:opacity-80 shadow-subtle"
@@ -379,7 +380,7 @@ export default function ServiceHome() {
               >
                 <Ionicons name="search" size={18} color="#6B7280" />
                 <Text className="flex-1 ml-tight text-text-primary" numberOfLines={1}>
-                  {addressLabel || 'Enter pickup or service location'}
+                  {address || 'Enter pickup or service location'}
                 </Text>
               </Pressable>
 

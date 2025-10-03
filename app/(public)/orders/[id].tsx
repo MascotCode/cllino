@@ -1,13 +1,13 @@
-import { useMemo } from 'react';
-import { ScrollView, Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
 import Badge from '@/components/ui/Badge';
+import { AppButton as Button } from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { useOrdersStore, type PublicOrder } from '@/lib/public/ordersStore';
 import { fmtMoney } from '@/utils/format';
-import { AppButton as Button } from '@/components/ui/Button';
+import { Ionicons } from '@expo/vector-icons';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useMemo } from 'react';
+import { ScrollView, Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const formatTimeSnippet = (order: PublicOrder | undefined) => {
   if (!order) {
@@ -67,8 +67,8 @@ export default function PublicOrderReceiptScreen() {
     return (
       <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
         <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-xl font-semibold text-gray-900 mb-2">Receipt unavailable</Text>
-          <Text className="text-center text-gray-500 mb-6">
+          <Text className="text-xl font-semibold text-gray-900 mb-2">Order not found</Text>
+          <Text className="text-center text-gray-500 mb-6" testID="pub.orders.receipt.notfound">
             We couldn't find that order. It may have been cleared.
           </Text>
           <Button variant="primary" onPress={() => router.back()}>

@@ -1,3 +1,6 @@
+import PriceRow from '@/components/public/PriceRow';
+import ReviewSection from '@/components/public/ReviewSection';
+import TotalPill from '@/components/public/TotalPill';
 import { SERVICE_PRICING } from '@/constants/pricing';
 import {
   calcTotal,
@@ -8,13 +11,11 @@ import {
   type Vehicle,
 } from '@/lib/public/checkoutStore';
 import { useOrdersStore, type PublicOrder } from '@/lib/public/ordersStore';
+import { logInteraction } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import ReviewSection from '@/components/public/ReviewSection';
-import PriceRow from '@/components/public/PriceRow';
-import TotalPill from '@/components/public/TotalPill';
 import { AppButton as Button } from '../../components/ui/Button';
 import StickyFooter from '../../components/ui/StickyFooter';
 import Title from '../../components/ui/Title';
@@ -112,6 +113,13 @@ export default function PriceScreen() {
   const showVehicleRow = Boolean(resolvedVehicle?.makeModel || resolvedVehicle?.plate);
 
   const handleConfirm = () => {
+    // Log analytics
+    logInteraction({
+      route: '/(public)/price',
+      elementId: 'tid.public.price.confirm',
+      meta: { service: resolvedService.title, total: resolvedTotal }
+    });
+
     const now = Date.now();
     const orderId = now.toString();
     const fallbackAddress = 'Address not provided';
@@ -138,9 +146,9 @@ export default function PriceScreen() {
       address: address ?? fallbackAddress,
       vehicle: vehicle
         ? {
-            makeModel: vehicle.makeModel,
-            plate: vehicle.plate,
-          }
+          makeModel: vehicle.makeModel,
+          plate: vehicle.plate,
+        }
         : undefined,
       whenLabel,
       slotStart,

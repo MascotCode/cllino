@@ -6,6 +6,9 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "mobile",
+    "linking": {
+      "prefixes": ["mobile://", "https://cllino.app"]
+    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {

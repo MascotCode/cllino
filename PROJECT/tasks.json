@@ -669,6 +669,92 @@
         "commits": []
       },
       "notes": "Full orders flow for public user journey; includes store persistence, navigation, and checkout reset"
+    },
+    {
+      "id": "t-035",
+      "title": "Pre-auth hardening (persistence, empty states, analytics)",
+      "status": "done",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": [
+        "/(public)/orders",
+        "/(public)/orders/[id]",
+        "/(public)/price"
+      ],
+      "files": [
+        "lib/public/checkoutStore.ts",
+        "lib/public/ordersStore.ts",
+        "app/(public)/orders.tsx",
+        "app/(public)/orders/[id].tsx",
+        "app/(public)/price.tsx",
+        "utils/analytics.ts"
+      ],
+      "testIDs": [
+        "pub.orders.empty-active",
+        "pub.orders.empty-completed",
+        "pub.orders.receipt.notfound",
+        "tid.public.price.confirm",
+        "pub.orders.resume-<id>",
+        "pub.orders.receipt-<id>",
+        "pub.order.markComplete",
+        "pub.orders.seed"
+      ],
+      "acceptance": [
+        "Persist checkoutStore & ordersStore via AsyncStorage with keys cllino.checkout.v1/cllino.orders.v1",
+        "Show empty states with listed testIDs",
+        "Receipt not-found state when id missing",
+        "logInteraction fires on confirm/resume/receipt/markComplete",
+        "Deep linking support for orders/[id] route",
+        "Dev seed button for demo orders (__DEV__ only)"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Public flow now resilient without auth with persistent stores, proper empty states, deep linking, analytics tracking, and dev seeding"
+    },
+    {
+      "id": "t-036",
+      "title": "Address Picker V2 (modal, search, map, wiring)",
+      "status": "done",
+      "priority": "P1",
+      "area": "public",
+      "owner": "@anouar.alh",
+      "routes": ["/(public)/address/select", "/(public)/address/map"],
+      "files": [
+        "app/(public)/address/select.tsx",
+        "app/(public)/address/map.tsx",
+        "components/public/AddressSearchBar.tsx",
+        "components/public/AddressRow.tsx",
+        "components/public/ListSection.tsx",
+        "utils/geocode.ts"
+      ],
+      "testIDs": [
+        "address.modal.search",
+        "address.modal.clear",
+        "address.modal.useLocation",
+        "address.modal.chooseOnMap",
+        "address.modal.saved-<slug>",
+        "address.modal.addNew",
+        "address.modal.recent-<id>",
+        "address.modal.loading",
+        "address.modal.empty",
+        "address.modal.permissionDenied",
+        "address.modal.dismiss",
+        "address.map.pin",
+        "address.map.confirm"
+      ],
+      "acceptance": [
+        "Select sets checkoutStore.address and dismisses/navigates back",
+        "Permission denied shows inline state with settings CTA",
+        "Map confirm writes formatted address and returns",
+        "Debounced search results with loading/empty states",
+        "All touch targets ≥44dp and safe-area respected"
+      ],
+      "evidence": {
+        "commits": []
+      },
+      "notes": "Polished address selection with search, current location, map picker, saved addresses; wired to checkoutStore.address with graceful fallbacks and permission handling"
     }
   ]
 }

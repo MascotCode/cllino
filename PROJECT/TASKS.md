@@ -88,6 +88,30 @@ _Last sync: 2025-10-01T17:43:52Z • Branch: main • Head: 5bee973_
 
     - Provider card shows ETA, rating (tight), vehicle, plate, cash notice
 
+- [ ] Address Picker V2 (modal, search, map, wiring) (ID: t-036) — Owner: @anouar.alh • Area: public • Status: done
+
+  - Polished address selection with search, current location, map picker, saved addresses
+
+  - Wired to checkoutStore.address with graceful fallbacks and permission handling
+
+  - Routes: `/(public)/address/select`, `/(public)/address/map`
+
+  - Files: app/(public)/address/select.tsx, app/(public)/address/map.tsx, components/public/AddressSearchBar.tsx, components/public/AddressRow.tsx, components/public/ListSection.tsx, utils/geocode.ts
+
+  - TestIDs: address.modal.search, address.modal.clear, address.modal.useLocation, address.modal.chooseOnMap, address.modal.saved-<slug>, address.modal.addNew, address.modal.recent-<id>, address.modal.loading, address.modal.empty, address.modal.permissionDenied, address.modal.dismiss, address.map.pin, address.map.confirm
+
+  - Acceptance:
+
+    - Select sets checkoutStore.address and dismisses/navigates back
+
+    - Permission denied shows inline state with settings CTA
+
+    - Map confirm writes formatted address and returns
+
+    - Debounced search results with loading/empty states
+
+    - All touch targets ≥44dp and safe-area respected
+
 ### NEXT
 
 - [ ] Persist provider profile + availability to storage (ID: t-002) — Owner: TBA • Area: core • Status: planned
@@ -245,6 +269,28 @@ _Last sync: 2025-10-01T17:43:52Z • Branch: main • Head: 5bee973_
 ---
 
 ## Completed (most recent first)
+
+- [x] Pre-auth hardening (persistence, empty states, analytics) (ID: t-035) — Done: 2025-01-27 — Owner: @anouar.alh • Area: public • Status: done
+
+  - Outcome: Public flow now resilient without auth with persistent stores, proper empty states, deep linking, analytics tracking, and dev seeding
+
+  - Evidence: `lib/public/checkoutStore.ts`, `lib/public/ordersStore.ts`, `app/(public)/orders.tsx`, `app/(public)/orders/[id].tsx`, `app/(public)/price.tsx`, `app/(public)/confirm.tsx`, `utils/analytics.ts`, `app.json`
+
+  - TestIDs: pub.orders.empty-active, pub.orders.empty-completed, pub.orders.receipt.notfound, tid.public.price.confirm, pub.orders.resume-<id>, pub.orders.receipt-<id>, pub.order.markComplete, pub.orders.seed
+
+  - Acceptance:
+
+    - Persist checkoutStore & ordersStore via AsyncStorage with keys cllino.checkout.v1/cllino.orders.v1
+
+    - Show empty states with listed testIDs
+
+    - Receipt not-found state when id missing
+
+    - logInteraction fires on confirm/resume/receipt/markComplete
+
+    - Deep linking support for orders/[id] route
+
+    - Dev seed button for demo orders (**DEV** only)
 
 - [x] Provider onboarding form with keyboard avoidance (ID: t-010) — Done: 2025-09-26 — Commit(s): b08f6b8
 
