@@ -111,6 +111,7 @@ export default function ServiceHome() {
 
   const geocodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastGeocodedRef = useRef<{ lat: number; lng: number } | null>(null);
+  const allowRegionSyncRef = useRef(false);
 
   const haversineDistance = (lat1: number, lng1: number, lat2: number, lng2: number) => {
     const R = 6371000;
@@ -125,9 +126,9 @@ export default function ServiceHome() {
     return R * c;
   };
 
-  const performReverseGeocodeAndUpdateStore = async (lat: number, lng: number) => {
+  const performReverseGeocodeAndUpdateStore = async (lat: number, lng: number, { force = false }: { force?: boolean } = {}) => {
     // Threshold guard
-    if (lastGeocodedRef.current) {
+    if (!force && lastGeocodedRef.current) {
       const d = haversineDistance(lastGeocodedRef.current.lat, lastGeocodedRef.current.lng, lat, lng);
       if (d < DISTANCE_THRESHOLD_METERS) return;
     }
@@ -188,9 +189,10 @@ export default function ServiceHome() {
       // Animate first; geocoding will run after region settles
       if (geocodeTimerRef.current) { clearTimeout(geocodeTimerRef.current); geocodeTimerRef.current = null; }
       geocodeTimerRef.current = setTimeout(() => {
-        performReverseGeocodeAndUpdateStore(latitude, longitude);
+        performReverseGeocodeAndUpdateStore(latitude, longitude, { force: true });
       }, GEOCODE_DEBOUNCE_MS);
 
+      allowRegionSyncRef.current = true;
       mapRef.current?.animateToRegion(
         { latitude, longitude, latitudeDelta: 0.01, longitudeDelta: 0.01 },
         500
@@ -205,8 +207,15 @@ export default function ServiceHome() {
   const openRouteModal = () => router.push('/(public)/address/select');
 
   const onSelectPlace = (place: Place) => {
-    setAddressLabel(place.title);
+    const formattedLabel = place.subtitle ? `${place.title}, ${place.subtitle}` : place.title;
+    setAddressLabel(formattedLabel);
     setCoords({ lat: place.lat, lng: place.lng });
+    setOrder({
+      address: formattedLabel,
+      addressCoords: { label: formattedLabel, lat: place.lat, lng: place.lng },
+    });
+    lastGeocodedRef.current = { lat: place.lat, lng: place.lng };
+    allowRegionSyncRef.current = true;
     mapRef.current?.animateCamera({
       center: { latitude: place.lat, longitude: place.lng },
       zoom: 15,
@@ -226,6 +235,7 @@ export default function ServiceHome() {
       setAddressLabel(addressCoords.label);
 
       // Animate map to the selected location
+      allowRegionSyncRef.current = true;
       mapRef.current?.animateToRegion(
         {
           latitude: addressCoords.lat,
@@ -389,11 +399,19 @@ export default function ServiceHome() {
         onPanDrag={() => hideSheet(0)}
         onTouchEnd={() => showSheet(200)}
         onTouchCancel={() => showSheet(200)}
-        onRegionChangeComplete={(region) => {
+        onRegionChangeComplete={(region, details) => {
           showSheet(0);
+
+          if (!allowRegionSyncRef.current || details?.isGesture) {
+            allowRegionSyncRef.current = false;
+            return;
+          }
+
+          allowRegionSyncRef.current = false;
+
           if (geocodeTimerRef.current) { clearTimeout(geocodeTimerRef.current); geocodeTimerRef.current = null; }
           geocodeTimerRef.current = setTimeout(() => {
-            performReverseGeocodeAndUpdateStore(region.latitude, region.longitude);
+            performReverseGeocodeAndUpdateStore(region.latitude, region.longitude, { force: true });
           }, GEOCODE_DEBOUNCE_MS);
         }}
       >
@@ -449,7 +467,7 @@ export default function ServiceHome() {
               <Pressable
                 onPress={() => router.push('/(public)/address/map')}
                 testID="home.chooseOnMap"
-                className="flex-row items-center justify-center gap-2 mt-3 py-3 px-3 bg-surface-0 border border-border-subtle rounded-2xl active:opacity-85"
+                className="flex-row items-center justify-center gap-2 px-3 py-3 mt-3 border bg-surface-0 border-border-subtle rounded-2xl active:opacity-85"
                 accessibilityRole="button"
                 accessibilityLabel="Choose location on map"
               >
@@ -614,7 +632,7 @@ export default function ServiceHome() {
               </View>
 
               {/* Pricing Summary */}
-              <View className="p-5 mb-8 border border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50 rounded-2xl">
+              <View className="p-5 mb-8 border border-gray-100 rounded-2xl">
                 <View className="flex-row items-center gap-2 mb-3">
                   <MaterialIcons name="receipt" size={18} color="#6B7280" />
                   <Text className="text-sm font-medium text-gray-700">Pricing Summary</Text>

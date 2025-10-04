@@ -10,11 +10,14 @@ import { AccessibilityInfo, ActivityIndicator, Alert, Animated, Linking, Platfor
 import MapView, { PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+const FOCUSED_DELTA = 0.003;
+const USER_LOCATION_DELTA = 0.006;
+
 const INITIAL_REGION: Region = {
     latitude: 33.5731,
     longitude: -7.5898,
-    latitudeDelta: 0.005, // Match home map zoom when location selected
-    longitudeDelta: 0.005,
+    latitudeDelta: FOCUSED_DELTA,
+    longitudeDelta: FOCUSED_DELTA,
 };
 
 const GEOCODE_DEBOUNCE_MS = 400;
@@ -63,8 +66,8 @@ export default function AddressMapScreen() {
     const [initialRegion] = useState<Region>({
         latitude: initialPosition.lat,
         longitude: initialPosition.lng,
-        latitudeDelta: 0.005, // Closer zoom when coming from selected address
-        longitudeDelta: 0.005,
+        latitudeDelta: FOCUSED_DELTA, // Closer zoom when coming from selected address
+        longitudeDelta: FOCUSED_DELTA,
     });
 
     // Refs for debouncing and tracking
@@ -107,8 +110,8 @@ export default function AddressMapScreen() {
                         {
                             latitude: newPosition.lat,
                             longitude: newPosition.lng,
-                            latitudeDelta: 0.01,
-                            longitudeDelta: 0.01,
+                            latitudeDelta: FOCUSED_DELTA,
+                            longitudeDelta: FOCUSED_DELTA,
                         },
                         500
                     );
@@ -284,8 +287,8 @@ export default function AddressMapScreen() {
                 {
                     latitude,
                     longitude,
-                    latitudeDelta: 0.015,
-                    longitudeDelta: 0.015,
+                    latitudeDelta: USER_LOCATION_DELTA,
+                    longitudeDelta: USER_LOCATION_DELTA,
                 },
                 500
             );

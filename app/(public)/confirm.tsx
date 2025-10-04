@@ -139,8 +139,8 @@ export default function ConfirmScreen() {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <ScrollView className="flex-1 px-4 py-6" showsVerticalScrollIndicator={false}>
-        <View className="flex-row items-center justify-between mb-6">
+      <ScrollView className="flex-1 px-4 pb-6" showsVerticalScrollIndicator={false} stickyHeaderIndices={[0]}>
+        <View className="flex-row items-center justify-between py-6 mb-6 bg-white">
           <View>
             <Title>{order?.serviceTitle ?? 'Provider assigned'}</Title>
             <Text className="mt-1 text-sm text-gray-500">{formatOrderTime(order)}</Text>
