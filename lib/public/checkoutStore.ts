@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
+import { shallow } from 'zustand/shallow';
 import { persist } from 'zustand/middleware';
 
 export type Service = {
@@ -102,6 +103,16 @@ export const useCheckoutStore = create<CheckoutState>()(
     }
   )
 );
+
+export const useCheckoutAddress = () =>
+  useCheckoutStore(
+    (state) => ({
+      address: state.address,
+      addressCoords: state.addressCoords,
+      setAddressSelection: state.setOrder,
+    }),
+    shallow
+  );
 
 export const calcTotal = (
   state: Pick<CheckoutState, 'service' | 'addons'>

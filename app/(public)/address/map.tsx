@@ -1,5 +1,5 @@
 import { AppButton } from '@/components/ui/Button';
-import { useCheckoutStore } from '@/lib/public/checkoutStore';
+import { useCheckoutAddress } from '@/lib/public/checkoutStore';
 import { reverseGeocode } from '@/utils/geocode';
 import { Ionicons } from '@expo/vector-icons';
 import * as IntentLauncher from 'expo-intent-launcher';
@@ -43,9 +43,7 @@ function haversineDistance(
 export default function AddressMapScreen() {
     const insets = useSafeAreaInsets();
     const mapRef = useRef<MapView>(null);
-    const setOrder = useCheckoutStore((state) => state.setOrder);
-    const addressCoords = useCheckoutStore((state) => state.addressCoords);
-    const currentAddress = useCheckoutStore((state) => state.address);
+    const { address: currentAddress, addressCoords, setAddressSelection } = useCheckoutAddress();
 
     // Determine initial position from store or fallback to default
     const initialPosition = addressCoords?.lat && addressCoords?.lng
@@ -304,7 +302,7 @@ export default function AddressMapScreen() {
 
     // Confirm selection and save to store
     const handleConfirm = useCallback(() => {
-        setOrder({
+        setAddressSelection({
             address: addressLabel,
             addressCoords: {
                 label: addressLabel,
@@ -319,7 +317,7 @@ export default function AddressMapScreen() {
         } else {
             router.replace('/');
         }
-    }, [addressLabel, mapCenter, setOrder]);
+    }, [addressLabel, mapCenter, setAddressSelection]);
 
     // Go back without selecting
     const handleBack = useCallback(() => {
@@ -474,4 +472,3 @@ export default function AddressMapScreen() {
         </View>
     );
 }
-

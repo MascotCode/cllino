@@ -3,13 +3,13 @@ import AddressSearchBar from '@/components/public/AddressSearchBar';
 import ListSection from '@/components/public/ListSection';
 import Card from '@/components/ui/Card';
 import Title from '@/components/ui/Title';
-import { useCheckoutStore } from '@/lib/public/checkoutStore';
+import { useCheckoutAddress } from '@/lib/public/checkoutStore';
 import { formatAddress, reverseGeocode, searchAddresses, type GeocodedAddress } from '@/utils/geocode';
 import { Ionicons } from '@expo/vector-icons';
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Linking, Platform, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -53,10 +53,11 @@ const RECENT_ADDRESSES: GeocodedAddress[] = [
 
 export default function AddressSelectScreen() {
     const insets = useSafeAreaInsets();
-    const setOrder = useCheckoutStore((state) => state.setOrder);
+    const { address: currentAddress, setAddressSelection } = useCheckoutAddress();
+    const lastSyncedAddressRef = useRef(currentAddress);
 
     // State
-    const [query, setQuery] = useState('');
+    const [query, setQuery] = useState(currentAddress ?? '');
     const [isSearching, setIsSearching] = useState(false);
     const [searchResults, setSearchResults] = useState<GeocodedAddress[]>([]);
     const [permissionDenied, setPermissionDenied] = useState(false);
@@ -88,7 +89,9 @@ export default function AddressSelectScreen() {
     // Handle address selection
     const handleSelectAddress = useCallback(
         (address: string, lat?: number, lng?: number) => {
-            setOrder({
+            lastSyncedAddressRef.current = address;
+            setQuery(address);
+            setAddressSelection({
                 address,
                 addressCoords: { label: address, lat, lng }
             });
@@ -99,7 +102,7 @@ export default function AddressSelectScreen() {
                 router.replace('/');
             }
         },
-        [setOrder]
+        [setAddressSelection, setQuery]
     );
 
     // Use current location
@@ -189,6 +192,14 @@ export default function AddressSelectScreen() {
         setQuery('');
         setSearchResults([]);
     }, []);
+
+    useEffect(() => {
+        if (lastSyncedAddressRef.current === currentAddress) {
+            return;
+        }
+        lastSyncedAddressRef.current = currentAddress;
+        setQuery(currentAddress ?? '');
+    }, [currentAddress]);
 
     // Determine what to show
     const showSearchResults = query.trim().length > 0;
@@ -373,4 +384,3 @@ export default function AddressSelectScreen() {
         </View>
     );
 }
-

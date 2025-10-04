@@ -19,9 +19,12 @@ export type PublicOrder = {
   completedAt?: number;
 };
 
-type OrdersState = {
+type PersistedOrdersState = {
   active: PublicOrder[];
   completed: PublicOrder[];
+};
+
+type OrdersState = PersistedOrdersState & {
   rehydrated: boolean;
   addActive: (order: PublicOrder) => void;
   completeOrder: (id: string) => void;
@@ -30,7 +33,7 @@ type OrdersState = {
 };
 
 export const useOrdersStore = create<OrdersState>()(
-  persist(
+  persist<OrdersState, PersistedOrdersState>(
     (set, get) => ({
       active: [],
       completed: [],
@@ -50,6 +53,7 @@ export const useOrdersStore = create<OrdersState>()(
           );
 
           return {
+            ...state,
             active: [nextOrder, ...dedupedActive],
             completed: dedupedCompleted,
           };
@@ -68,6 +72,7 @@ export const useOrdersStore = create<OrdersState>()(
           };
 
           return {
+            ...state,
             active: state.active.filter((o) => o.id !== id),
             completed: [
               completedOrder,
@@ -82,7 +87,12 @@ export const useOrdersStore = create<OrdersState>()(
           completed.find((order) => order.id === id)
         );
       },
-      removeAll: () => set({ active: [], completed: [] }),
+      removeAll: () =>
+        set((state) => ({
+          ...state,
+          active: [],
+          completed: [],
+        })),
     }),
     {
       name: 'cllino.orders.v1',
@@ -103,7 +113,7 @@ export const useOrdersStore = create<OrdersState>()(
           state.rehydrated = true;
         }
       },
-      partialize: (state) => ({
+      partialize: (state): PersistedOrdersState => ({
         active: state.active,
         completed: state.completed,
       }),
