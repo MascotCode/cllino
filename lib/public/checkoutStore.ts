@@ -35,7 +35,17 @@ export type AddressWithCoords = {
   lng?: number;
 };
 
-export type CheckoutState = {
+export type ProviderSummary = {
+  id: string;
+  name: string;
+  eta?: string;
+  distance?: string;
+  car?: string;
+  price?: string;
+  rating?: string;
+};
+
+type CheckoutDetails = {
   service: Service | null;
   addons: Addon[];
   address: string | null;
@@ -43,9 +53,15 @@ export type CheckoutState = {
   vehicle: Vehicle | null;
   time: TimeInfo | null;
   payment: string;
+  selectedProvider: ProviderSummary | null;
+};
+
+export type CheckoutState = CheckoutDetails & {
   rehydrated: boolean;
-  setOrder: (payload: Partial<CheckoutState>) => void;
+  setOrder: (payload: Partial<CheckoutDetails>) => void;
   clearOrder: () => void;
+  setSelectedProvider: (payload: ProviderSummary) => void;
+  clearSelectedProvider: () => void;
 };
 
 export const useCheckoutStore = create<CheckoutState>()(
@@ -59,6 +75,7 @@ export const useCheckoutStore = create<CheckoutState>()(
       time: null,
       payment: DEFAULT_PAYMENT,
       rehydrated: false,
+      selectedProvider: null,
       setOrder: (payload) =>
         set((state) => ({
           service: payload.service ?? state.service,
@@ -68,6 +85,8 @@ export const useCheckoutStore = create<CheckoutState>()(
           vehicle: payload.vehicle ?? state.vehicle,
           time: payload.time ?? state.time,
           payment: payload.payment ?? state.payment ?? DEFAULT_PAYMENT,
+          selectedProvider:
+            payload.selectedProvider ?? state.selectedProvider,
         })),
       clearOrder: () =>
         set(() => ({
@@ -78,6 +97,15 @@ export const useCheckoutStore = create<CheckoutState>()(
           vehicle: null,
           time: null,
           payment: DEFAULT_PAYMENT,
+          selectedProvider: null,
+        })),
+      setSelectedProvider: (payload) =>
+        set(() => ({
+          selectedProvider: payload,
+        })),
+      clearSelectedProvider: () =>
+        set(() => ({
+          selectedProvider: null,
         })),
     }),
     {

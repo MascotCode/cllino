@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, Animated, Easing } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useCheckoutStore } from '@/lib/public/checkoutStore';
 
 // ---- config ----
 const REVEAL_AFTER_MS = 900;   // delay before first card
@@ -118,6 +119,7 @@ function ProviderCard({ p, index, onChoose }: { p: Provider; index: number; onCh
 export default function MatchingScreen(){
   const params = useLocalSearchParams<MatchingParams>();
   const providers = useProviders(params.providers);
+  const setSelectedProvider = useCheckoutStore((state) => state.setSelectedProvider);
 
   const orderId = useMemo(() => {
     const value = params.id;
@@ -156,6 +158,15 @@ export default function MatchingScreen(){
   }, [providers]);
 
   const onChoose = (p: Provider) => {
+    setSelectedProvider({
+      id: p.id,
+      name: p.name,
+      eta: p.eta,
+      distance: p.distance,
+      car: p.car,
+      price: p.price,
+      rating: p.rating,
+    });
     const nextParams: Record<string, string> = { providerId: p.id };
     if (orderId) {
       nextParams.id = orderId;
