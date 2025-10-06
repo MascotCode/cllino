@@ -1,104 +1,176 @@
-import { Ionicons, MaterialIcons } from '@expo/vector-icons';
-import { Link, useLocalSearchParams } from 'expo-router';
-import { Text, View } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import Badge from '../../components/ui/Badge';
-import { AppButton as Button } from '../../components/ui/Button';
-import Card from '../../components/ui/Card';
-import Title from '../../components/ui/Title';
-import { fmtMoney } from '../../utils/format';
-import { getChevronIcon } from '../../utils/i18n';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { View, Text, Pressable, Animated, Easing } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
+import { LinearGradient } from 'expo-linear-gradient';
 
-// MOCK DATA
-const PROVIDERS = [
-  {
-    id: 'john',
-    name: 'John',
-    rating: 4.8,
-    distance: '2.1 km',
-    eta: '5 min away',
-    carType: 'Sedan',
-    price: 120
-  },
-  {
-    id: 'maria',
-    name: 'Maria',
-    rating: 4.6,
-    distance: '3.0 km',
-    eta: '8 min away',
-    carType: 'SUV',
-    price: 135
-  }
-];
+// ---- config ----
+const REVEAL_AFTER_MS = 900;   // delay before first card
+const STAGGER_MS = 400;        // between cards
 
-export default function MatchingScreen() {
-  const params = useLocalSearchParams();
-  const orderId = typeof params.id === 'string' ? params.id : Array.isArray(params.id) ? params.id[0] : undefined;
-  const confirmHref = orderId ? { pathname: './confirm', params: { id: orderId } } : './confirm';
+type Provider = { id: string; name: string; eta: string; distance: string; car: string; price: string; rating: string };
+type MatchingParams = { id?: string | string[]; providers?: string | string[] };
+
+function useProviders(providersParam?: string | string[]): Provider[] {
+  return useMemo(() => {
+    const raw = Array.isArray(providersParam) ? providersParam[0] : providersParam;
+    if (raw) {
+      try {
+        const parsed = JSON.parse(String(raw)) as Provider[];
+        if (Array.isArray(parsed)) {
+          return parsed;
+        }
+      } catch (error) {
+        console.warn('Failed to parse providers param', error);
+      }
+    }
+    return [
+      { id: '1', name: 'John',  eta: '5 min away',  distance: '2.1 km', car: 'Sedan',  price: '120 MAD', rating: '4.8' },
+      { id: '2', name: 'Maria', eta: '8 min away',  distance: '3.0 km', car: 'SUV',    price: '135 MAD', rating: '4.6' },
+      { id: '3', name: 'Youssef', eta: '11 min away', distance: '3.8 km', car: 'Hatch', price: '110 MAD', rating: '4.7' },
+    ];
+  }, [providersParam]);
+}
+
+// ---- header with radar + animated dots ----
+function MatchingHeader(){
+  const ring1 = useRef(new Animated.Value(0)).current; // scale + fade ring
+  const ring2 = useRef(new Animated.Value(0)).current; // delayed ring
+  const [dotCount, setDotCount] = useState(0);
+
+  useEffect(() => {
+    const ring = (v: Animated.Value, delay = 0) => Animated.loop(
+      Animated.sequence([
+        Animated.delay(delay),
+        Animated.timing(v, { toValue: 1, duration: 1600, easing: Easing.out(Easing.quad), useNativeDriver: true }),
+        Animated.timing(v, { toValue: 0, duration: 0, useNativeDriver: true }),
+      ])
+    ).start();
+    ring(ring1, 0);
+    ring(ring2, 600);
+
+    const interval = setInterval(() => {
+      setDotCount(prev => (prev + 1) % 4);
+    }, 300);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [ring1, ring2]);
+
+  const dotText = '.'.repeat(dotCount);
+  const ringStyle = (v: Animated.Value) => ({
+    transform: [{ scale: v.interpolate({ inputRange:[0,1], outputRange:[0.6, 1.6] }) }],
+    opacity: v.interpolate({ inputRange:[0,1], outputRange:[0.35, 0] }),
+  });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
-      <View className="px-4 py-6 flex-1">
-        <Title>Finding your pro.</Title>
-
-        <View className="mt-8 gap-4">
-          {PROVIDERS.map((provider) => (
-            <Card key={provider.id} testID={`provider-card-${provider.id}`}>
-              <View className="gap-4">
-                {/* Provider Header */}
-                <View className="flex-row items-center justify-between">
-                  <View>
-                    <Text className="text-lg font-semibold text-gray-900">{provider.name}</Text>
-                    <View className="flex-row items-center gap-3 mt-1">
-                      <View className="flex-row items-center gap-1">
-                        <Ionicons name="star" size={16} color="#fbbf24" />
-                        <Text className="text-sm font-medium text-gray-900">{provider.rating}</Text>
-                      </View>
-                      <View className="flex-row items-center gap-1">
-                        <MaterialIcons name="place" size={16} color="#6b7280" />
-                        <Text className="text-sm text-gray-500">{provider.distance}</Text>
-                      </View>
-                    </View>
-                  </View>
-                  <Badge variant="info" testID={`eta-${provider.id}`}>
-                    {provider.eta}
-                  </Badge>
-                </View>
-
-                {/* Provider Details */}
-                <View className="border-t border-gray-200 pt-3">
-                  <View className="flex-row items-center justify-between">
-                    <View className="flex-row items-center gap-4">
-                      <View className="flex-row items-center gap-1">
-                        <Ionicons name="car" size={16} color="#6b7280" />
-                        <Text className="text-sm text-gray-500">{provider.carType}</Text>
-                      </View>
-                      <View className="flex-row items-center gap-1">
-                        <MaterialIcons name="attach-money" size={16} color="#6b7280" />
-                        <Text className="text-sm font-medium text-gray-900">
-                          {fmtMoney(provider.price)}
-                        </Text>
-                      </View>
-                    </View>
-                    <Ionicons name={getChevronIcon()} size={20} color="#9ca3af" />
-                  </View>
-                </View>
-
-                {/* Action Button */}
-                <Link href={confirmHref} asChild>
-                  <Button
-                    variant="primary"
-                    testID={`choose-${provider.id}`}
-                    className="w-full"
-                  >
-                    Choose {provider.name}
-                  </Button>
-                </Link>
-              </View>
-            </Card>
-          ))}
+    <View testID="matching.header" className="px-4 pt-6 pb-3">
+      <Text className="text-2xl font-semibold text-neutral-900">Finding your pro{dotText}</Text>
+      <View className="mt-3 items-center justify-center">
+        <View className="w-14 h-14 items-center justify-center">
+          <Animated.View testID="matching.radar" style={[{ position:'absolute', left:0, right:0, top:0, bottom:0, borderRadius:9999, backgroundColor:'#3B82F6' }, ringStyle(ring1)]} />
+          <Animated.View style={[{ position:'absolute', left:0, right:0, top:0, bottom:0, borderRadius:9999, backgroundColor:'#60A5FA' }, ringStyle(ring2)]} />
+          <View className="w-3 h-3 rounded-full bg-blue-600" />
         </View>
       </View>
-    </SafeAreaView>
+    </View>
+  );
+}
+
+// ---- provider card with enter animation ----
+function ProviderCard({ p, index, onChoose }: { p: Provider; index: number; onChoose: (p: Provider) => void }){
+  const opacity = useRef(new Animated.Value(0)).current;
+  const translateY = useRef(new Animated.Value(18)).current;
+  useEffect(() => {
+    const t = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(opacity, { toValue: 1, duration: 260, useNativeDriver: true }),
+        Animated.timing(translateY, { toValue: 0, duration: 260, easing: Easing.out(Easing.cubic), useNativeDriver: true }),
+      ]).start();
+    }, index * STAGGER_MS);
+    return () => clearTimeout(t);
+  }, [index, opacity, translateY]);
+
+  return (
+    <Animated.View style={{ opacity, transform:[{ translateY }] }} className="mx-4 my-3 rounded-3xl bg-white shadow-sm border border-neutral-200 p-4" testID={`matching.card.${p.id}`}>
+      <View className="flex-row justify-between items-start">
+        <Text className="text-lg font-semibold text-neutral-900">{p.name}</Text>
+        <View className="px-3 py-1 rounded-full bg-blue-50"><Text className="text-blue-600 text-xs font-medium">{p.eta}</Text></View>
+      </View>
+      <View className="flex-row items-center gap-4 mt-2">
+        <Text className="text-neutral-700">Rating {p.rating}</Text>
+        <Text className="text-neutral-400">|</Text>
+        <Text className="text-neutral-700">{p.distance}</Text>
+      </View>
+      <View className="flex-row items-center justify-between mt-3">
+        <Text className="text-neutral-500">Vehicle {p.car}</Text>
+        <Text className="text-neutral-900 font-semibold">{p.price}</Text>
+      </View>
+      {/* SAFE gradient inside Pressable */}
+      <Pressable testID={`matching.choose.${p.id}`} onPress={() => onChoose(p)} accessibilityRole="button" accessibilityLabel={`Choose ${p.name}`} className="mt-4 h-12 rounded-2xl overflow-hidden">
+        <LinearGradient colors={["#2563EB","#3B82F6"]} start={{x:0,y:0}} end={{x:1,y:1}} className="flex-1 items-center justify-center">
+          <Text className="text-white font-semibold">Choose {p.name}</Text>
+        </LinearGradient>
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+export default function MatchingScreen(){
+  const params = useLocalSearchParams<MatchingParams>();
+  const providers = useProviders(params.providers);
+
+  const orderId = useMemo(() => {
+    const value = params.id;
+    if (typeof value === 'string') {
+      return value;
+    }
+    if (Array.isArray(value) && value.length > 0) {
+      return value[0];
+    }
+    return undefined;
+  }, [params.id]);
+
+  const [visible, setVisible] = useState<Provider[]>([]);
+
+  useEffect(() => {
+    let indexRef = 0;
+    let mounted = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const start = () => {
+      const tick = () => {
+        if (!mounted) return;
+        if (indexRef < providers.length) {
+          setVisible(prev => [...prev, providers[indexRef]]);
+          indexRef += 1;
+          timer = setTimeout(tick, STAGGER_MS);
+        }
+      };
+      tick();
+    };
+    const startDelay = setTimeout(start, REVEAL_AFTER_MS);
+    return () => {
+      mounted = false;
+      clearTimeout(startDelay);
+      if (timer) clearTimeout(timer);
+    };
+  }, [providers]);
+
+  const onChoose = (p: Provider) => {
+    const nextParams: Record<string, string> = { providerId: p.id };
+    if (orderId) {
+      nextParams.id = orderId;
+    }
+    router.push({ pathname: './confirm', params: nextParams });
+  };
+
+  return (
+    <View className="flex-1 bg-white">
+      <MatchingHeader />
+      <View className="mt-1">
+        {visible.map((p, idx) => (
+          <ProviderCard key={p.id} p={p} index={idx} onChoose={onChoose} />
+        ))}
+      </View>
+    </View>
   );
 }
