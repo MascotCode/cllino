@@ -38,7 +38,7 @@ const formatCompletedAt = (timestamp?: number) => {
 
   try {
     return new Date(timestamp).toLocaleString();
-  } catch (error) {
+  } catch (_error) {
     return 'N/A';
   }
 };
@@ -60,6 +60,8 @@ export default function PublicOrderReceiptScreen() {
 
   const order = useOrdersStore((state) => (orderId ? state.findById(orderId) : undefined));
 
+  const provider = order?.provider;
+  const providerRatingLabel = provider?.rating !== undefined ? provider.rating.toFixed(1) : undefined;
   const totalLabel = order ? fmtMoney(order.price) : fmtMoney(0);
   const completedAtLabel = formatCompletedAt(order?.completedAt ?? order?.createdAt);
 
@@ -69,7 +71,7 @@ export default function PublicOrderReceiptScreen() {
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-xl font-semibold text-gray-900 mb-2">Order not found</Text>
           <Text className="text-center text-gray-500 mb-6" testID="pub.orders.receipt.notfound">
-            We couldn't find that order. It may have been cleared.
+            We couldn&apos;t find that order. It may have been cleared.
           </Text>
           <Button variant="primary" onPress={() => router.back()}>
             Go back
@@ -95,6 +97,38 @@ export default function PublicOrderReceiptScreen() {
             </View>
             <Badge variant="success">Completed</Badge>
           </View>
+
+          {provider ? (
+            <View className="flex-row items-start gap-2 mb-4">
+              <Ionicons name="person-circle-outline" size={20} color="#3b82f6" />
+              <View className="flex-1">
+                <Text className="text-sm text-gray-500">Provider</Text>
+                <Text className="text-base font-semibold text-gray-900" testID="pub.order.provider.name">
+                  {provider.name}
+                </Text>
+                {providerRatingLabel ? (
+                  <Text className="text-sm text-gray-700 mt-1" testID="pub.order.provider.rating">
+                    Rating {providerRatingLabel}
+                  </Text>
+                ) : null}
+                {provider.vehicle ? (
+                  <Text className="text-sm text-gray-700 mt-1" testID="pub.order.provider.vehicle">
+                    Vehicle {provider.vehicle}
+                  </Text>
+                ) : null}
+                {provider.plate ? (
+                  <Text className="text-sm text-gray-700 mt-1" testID="pub.order.provider.plate">
+                    Plate {provider.plate}
+                  </Text>
+                ) : null}
+                {provider.etaLabel ? (
+                  <Text className="text-sm text-gray-700 mt-1" testID="pub.order.provider.eta">
+                    ETA {provider.etaLabel}
+                  </Text>
+                ) : null}
+              </View>
+            </View>
+          ) : null}
 
           <View className="border-t border-gray-100 pt-4 mt-4">
             <View className="flex-row items-center justify-between mb-3">

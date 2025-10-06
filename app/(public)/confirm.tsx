@@ -1,4 +1,4 @@
-import { useCheckoutStore, type ProviderSummary } from '@/lib/public/checkoutStore';
+import { useCheckoutStore } from '@/lib/public/checkoutStore';
 import { useOrdersStore, type PublicOrder } from '@/lib/public/ordersStore';
 import { logInteraction } from '@/utils/analytics';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -21,16 +21,22 @@ type JobStepDefinition = {
 const FALLBACK_STATUS_LABEL = 'Assigned';
 const FALLBACK_STEP: PublicTimelineStep['key'] = 'onTheWay';
 
-function SelectedProviderCard({ provider }: { provider: ProviderSummary }) {
+function ProviderInfoCard({ provider }: { provider: NonNullable<PublicOrder['provider']> }) {
+  const ratingLabel = provider.rating !== undefined ? provider.rating.toFixed(1) : 'N/A';
+  const vehicleLabel = provider.vehicle ?? 'Vehicle details pending';
+  const plateLabel = provider.plate ?? 'Plate pending';
+
   return (
     <View className="rounded-3xl border border-neutral-200 bg-white p-5 shadow-sm">
       <View className="flex-row items-start justify-between">
-        <Text className="text-xl font-semibold text-neutral-900" testID="confirm.name">
+        <Text className="text-xl font-semibold text-neutral-900" testID="pub.order.provider.name">
           {provider.name}
         </Text>
-        {provider.eta ? (
+        {provider.etaLabel ? (
           <View className="rounded-full bg-blue-50 px-3 py-1">
-            <Text className="text-xs font-medium text-blue-600">{provider.eta}</Text>
+            <Text className="text-xs font-medium text-blue-600" testID="pub.order.provider.eta">
+              {provider.etaLabel}
+            </Text>
           </View>
         ) : null}
       </View>
@@ -38,29 +44,23 @@ function SelectedProviderCard({ provider }: { provider: ProviderSummary }) {
       <View className="mt-3 flex-row flex-wrap items-center gap-2">
         <View className="flex-row items-center gap-1.5">
           <Ionicons name="star" size={16} color="#f59e0b" />
-          <Text className="text-sm font-medium text-neutral-900" testID="confirm.rating">
-            {provider.rating ?? 'N/A'}
+          <Text className="text-sm font-medium text-neutral-900" testID="pub.order.provider.rating">
+            {ratingLabel}
           </Text>
         </View>
-        {provider.distance ? (
-          <>
-            <Text className="text-neutral-300">|</Text>
-            <Text className="text-sm text-neutral-700" testID="confirm.distance">
-              {provider.distance}
-            </Text>
-          </>
-        ) : null}
       </View>
 
-      <View className="mt-4 flex-row items-center justify-between">
-        <View className="flex-row items-center gap-2">
-          <Ionicons name="car-outline" size={16} color="#4b5563" />
-          <Text className="text-sm text-neutral-700" testID="confirm.car">
-            {provider.car ?? 'Vehicle details pending'}
-          </Text>
-        </View>
-        <Text className="text-base font-semibold text-neutral-900" testID="confirm.price">
-          {provider.price ?? 'N/A'}
+      <View className="mt-4 flex-row items-center gap-2">
+        <Ionicons name="car-outline" size={16} color="#4b5563" />
+        <Text className="text-sm text-neutral-700" testID="pub.order.provider.vehicle">
+          {vehicleLabel}
+        </Text>
+      </View>
+
+      <View className="mt-2 flex-row items-center gap-2">
+        <Ionicons name="pricetag-outline" size={16} color="#4b5563" />
+        <Text className="text-sm text-neutral-700" testID="pub.order.provider.plate">
+          {plateLabel}
         </Text>
       </View>
     </View>
@@ -128,13 +128,13 @@ export default function ConfirmScreen() {
   }, [params.id]);
 
   const order = useOrdersStore((state) => (orderId ? state.findById(orderId) : undefined));
-  const completeOrder = useOrdersStore((state) => state.completeOrder);
-  const selectedProvider = useCheckoutStore((state) => state.selectedProvider);
   const clearSelectedProvider = useCheckoutStore((state) => state.clearSelectedProvider);
+  const completeOrder = useOrdersStore((state) => state.completeOrder);
 
+  const provider = order?.provider;
   const statusLabel = order?.status === 'completed'
     ? 'Completed'
-    : selectedProvider
+    : provider
       ? 'Provider selected'
       : FALLBACK_STATUS_LABEL;
   const currentStepKey: PublicTimelineStep['key'] = order?.status === 'completed' ? 'completed' : FALLBACK_STEP;
@@ -165,7 +165,6 @@ export default function ConfirmScreen() {
   }, [order?.status, currentStepKey]);
 
   const handleMarkComplete = () => {
-    // Log analytics
     logInteraction({
       route: '/(public)/confirm',
       elementId: 'pub.order.markComplete',
@@ -180,7 +179,7 @@ export default function ConfirmScreen() {
     router.replace('/(public)/orders');
   };
 
-  const canMarkComplete = order ? order.status === 'active' : Boolean(selectedProvider);
+  const canMarkComplete = order?.status === 'active';
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
@@ -194,8 +193,8 @@ export default function ConfirmScreen() {
         </View>
 
         <View className="mt-4">
-          {selectedProvider ? (
-            <SelectedProviderCard provider={selectedProvider} />
+          {provider ? (
+            <ProviderInfoCard provider={provider} />
           ) : (
             <View className="rounded-3xl border border-dashed border-neutral-300 bg-neutral-50 p-5">
               <Text className="text-base font-semibold text-neutral-900">No provider selected</Text>

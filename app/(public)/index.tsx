@@ -8,7 +8,7 @@ import BottomSheet, {
 import * as IntentLauncher from 'expo-intent-launcher';
 import * as Location from 'expo-location';
 import { router } from 'expo-router';
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react';
 import { AccessibilityInfo, Alert, Linking, Modal, Platform, Pressable, Text, View } from 'react-native';
 import MapView, { Camera, Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import type { RouteEntryModalRef } from '../../components/search/RouteEntryModal';
@@ -71,17 +71,20 @@ const CAR_SIZES: Array<{ id: CarSize; label: string; surcharge: number }> = [
 ];
 
 type SheetView = 'services' | 'car-selection';
+const DEFAULT_ADDRESS_LABEL = 'Set pickup location';
 
 export default function ServiceHome() {
   const setOrder = useCheckoutStore((state) => state.setOrder);
   const address = useCheckoutStore((state) => state.address);
   const addressCoords = useCheckoutStore((state) => state.addressCoords);
+  const service = useCheckoutStore((state) => state.service);
+  const checkoutRehydrated = useCheckoutStore((state) => state.rehydrated);
   const mapRef = useRef<MapView>(null);
   const sheetRef = useRef<BottomSheet>(null);
   const routeModalRef = useRef<RouteEntryModalRef>(null);
   const snapPoints = useMemo(() => ['45%'], []); // Fixed single snap point
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [addressLabel, setAddressLabel] = useState<string>('Set pickup location');
+  const [addressLabel, setAddressLabel] = useState<string>(DEFAULT_ADDRESS_LABEL);
 
   // Car selection state
   const [sheetView, setSheetView] = useState<SheetView>('services');
@@ -97,6 +100,32 @@ export default function ServiceHome() {
   const [breakdown, setBreakdown] = useState<PricingBreakdown | null>(null);
   const [showMinWarning, setShowMinWarning] = useState<boolean>(false);
   const [effectiveAbsMax, setEffectiveAbsMax] = useState<number>(0);
+  const resetFlowUi = useCallback(() => {
+    setSheetView('services');
+    setSelectedService(null);
+    setCarSize('compact');
+    setVehicleCount(1);
+    setUserEditedPrice(false);
+    setPriceTotal(0);
+    setShowSoftCap(false);
+    setShowMinWarning(false);
+    setBreakdown(null);
+    setPendingAbsMax(null);
+    setEffectiveAbsMax(0);
+    setAddressLabel(DEFAULT_ADDRESS_LABEL);
+    setCoords(null);
+  }, []);
+  const hadDraftRef = useRef<boolean>(Boolean(service));
+  useEffect(() => {
+    if (!checkoutRehydrated) {
+      return;
+    }
+    const hasDraft = Boolean(service);
+    if (!hasDraft && hadDraftRef.current) {
+      resetFlowUi();
+    }
+    hadDraftRef.current = hasDraft;
+  }, [checkoutRehydrated, resetFlowUi, service]);
 
   const initialRegion: Region = {
     latitude: 33.5731, // Casablanca
@@ -325,7 +354,7 @@ export default function ServiceHome() {
   const onContinue = () => {
     if (!selectedService || !breakdown) return;
 
-    const trimmedAddress = addressLabel && addressLabel !== 'Set pickup location' ? addressLabel : null;
+    const trimmedAddress = addressLabel && addressLabel !== DEFAULT_ADDRESS_LABEL ? addressLabel : null;
     const carSizeMeta = CAR_SIZES.find((s) => s.id === carSize);
 
     setOrder({

@@ -17,6 +17,14 @@ export type PublicOrder = {
   slotEnd?: string;
   createdAt: number;
   completedAt?: number;
+  provider?: {
+    id: string;
+    name: string;
+    rating?: number;
+    vehicle?: string;
+    plate?: string;
+    etaLabel?: string;
+  };
 };
 
 type OrdersState = {

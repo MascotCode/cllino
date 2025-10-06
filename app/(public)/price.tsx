@@ -10,7 +10,6 @@ import {
   type TimeInfo,
   type Vehicle,
 } from '@/lib/public/checkoutStore';
-import { useOrdersStore, type PublicOrder } from '@/lib/public/ordersStore';
 import { logInteraction } from '@/utils/analytics';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
@@ -50,9 +49,7 @@ export default function PriceScreen() {
   const router = useRouter();
   const params = useLocalSearchParams();
   const storeState = useCheckoutStore();
-  const addActiveOrder = useOrdersStore((state) => state.addActive);
-
-  const { service, addons, address, vehicle, time, payment, clearOrder } = storeState;
+  const { service, addons, address, vehicle, time, payment } = storeState;
 
   const resolvedService = service ?? FALLBACK_ORDER.service;
   const resolvedAddons = addons.length ? addons : FALLBACK_ORDER.addons;
@@ -113,53 +110,15 @@ export default function PriceScreen() {
   const showVehicleRow = Boolean(resolvedVehicle?.makeModel || resolvedVehicle?.plate);
 
   const handleConfirm = () => {
-    // Log analytics
     logInteraction({
       route: '/(public)/price',
       elementId: 'tid.public.price.confirm',
       meta: { service: resolvedService.title, total: resolvedTotal }
     });
 
-    const now = Date.now();
-    const orderId = now.toString();
-    const fallbackAddress = 'Address not provided';
-    const fallbackWhenLabel =
-      FALLBACK_ORDER.time.whenLabel ?? FALLBACK_ORDER.time.fallbackLabel ?? 'Today';
-
-    const whenLabel =
-      time?.whenLabel ??
-      (typeof params.when === 'string'
-        ? params.when === 'now'
-          ? 'Now'
-          : fallbackWhenLabel
-        : undefined) ??
-      fallbackWhenLabel;
-    const slotStart = time?.slotStart ?? (typeof params.slotStart === 'string' ? params.slotStart : undefined);
-    const slotEnd = time?.slotEnd ?? (typeof params.slotEnd === 'string' ? params.slotEnd : undefined);
-
-    const order: PublicOrder = {
-      id: orderId,
-      status: 'active',
-      serviceTitle: resolvedService.title,
-      price: resolvedTotal,
-      durationMin: resolvedService.durationMin,
-      address: address ?? fallbackAddress,
-      vehicle: vehicle
-        ? {
-          makeModel: vehicle.makeModel,
-          plate: vehicle.plate,
-        }
-        : undefined,
-      whenLabel,
-      slotStart,
-      slotEnd,
-      createdAt: now,
-    };
-
-    addActiveOrder(order);
-    clearOrder();
-    router.push({ pathname: '/(public)/matching', params: { id: orderId } });
+    router.push('/(public)/matching');
   };
+
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
