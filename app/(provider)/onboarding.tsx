@@ -1,5 +1,5 @@
-import Card from '@/components/ui/Card';
 import { AppButton as Button } from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import NoticeBanner from '@/components/ui/NoticeBanner';
 import StickyFooter from '@/components/ui/StickyFooter';
 import { useProviderProfile } from '@/lib/provider/store';
@@ -96,8 +96,7 @@ export default function ProviderOnboarding() {
     <SafeAreaView className="flex-1 bg-white" edges={['top']}>
       <KeyboardAvoidingView
         className="flex-1"
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? inset.top + 64 : 0}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView
           className="flex-1"

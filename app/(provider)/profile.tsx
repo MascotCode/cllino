@@ -1,5 +1,5 @@
-import Card from '@/components/ui/Card';
 import { AppButton as Button } from '@/components/ui/Button';
+import Card from '@/components/ui/Card';
 import NoticeBanner from '@/components/ui/NoticeBanner';
 import StatusPill from '@/components/ui/StatusPill';
 import { useProviderProfile } from '@/lib/provider/store';
@@ -32,7 +32,7 @@ export default function ProviderProfile() {
           style: 'destructive',
           onPress: () => {
             setOnlineStatus(false);
-            router.replace('/(provider)/onboarding');
+            router.replace('/(onboarding)/welcome');
           }
         }
       ]
@@ -60,7 +60,7 @@ export default function ProviderProfile() {
 
           <Card className="gap-component">
             <View className="flex-row items-center gap-component">
-              <View className="h-12 w-12 items-center justify-center rounded-full bg-blue-100">
+              <View className="items-center justify-center w-12 h-12 bg-blue-100 rounded-full">
                 <Ionicons name="person" size={24} color="#2563eb" />
               </View>
               <View className="flex-1 gap-minimal">
@@ -103,7 +103,7 @@ export default function ProviderProfile() {
 
           <Card className="gap-component border-rose-200 bg-rose-50">
             <View className="flex-row items-start gap-component">
-              <View className="h-10 w-10 items-center justify-center rounded-full bg-rose-500">
+              <View className="items-center justify-center w-10 h-10 rounded-full bg-rose-500">
                 <Ionicons name="log-out" size={18} color="white" />
               </View>
               <View className="flex-1 gap-tight">
